@@ -1,0 +1,198 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f5f5f5;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.app-container {
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1e1b4b, #312e81);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+}
+
+.sidebar-header {
+  padding: 24px 20px 0;
+  color: #fff;
+}
+
+.sidebar-header h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.app-sidebar .el-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+  margin: 12px 16px;
+}
+
+.app-sidebar .el-menu {
+  border-right: none;
+}
+
+.app-sidebar .el-menu-item {
+  border-radius: 10px;
+  margin: 2px 10px;
+  padding: 12px 20px;
+  height: auto;
+  line-height: 1.5;
+}
+
+.app-sidebar .el-menu-item:hover,
+.app-sidebar .el-menu-item.is-active {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.app-main {
+  margin-left: 250px;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.page-title {
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stat-card .stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.text-success {
+  color: #10b981 !important;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+.text-primary {
+  color: #4f46e5 !important;
+}
+
+.text-info {
+  color: #0284c7 !important;
+}
+
+.text-muted {
+  color: #909399;
+}
+
+.fw-bold {
+  font-weight: 600;
+}
+
+.mb-1 {
+  margin-bottom: 4px;
+}
+
+.mb-3 {
+  margin-bottom: 12px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.mt-3 {
+  margin-top: 12px;
+}
+
+.fs-4 {
+  font-size: 1.5rem;
+}
+
+.acc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.acc-balance {
+  padding: 4px 0;
+}
+
+.cat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.cat-item span {
+  font-size: 14px;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-3 {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* Fix element plus card padding */
+.el-card__body {
+  padding: 20px;
+}

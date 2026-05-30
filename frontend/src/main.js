@@ -1,0 +1,22 @@
+/**
+ * 应用入口文件
+ * 初始化 Vue 3 应用，注册 Element Plus 组件库及其图标，挂载路由
+ */
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import 'element-plus/dist/index.css'
+import './style.css'
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+
+// 全局注册所有 Element Plus 图标，方便在模板中直接使用
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+app.use(ElementPlus)
+app.use(router)
+app.mount('#app')
