@@ -79,7 +79,9 @@
           </el-col>
         </el-row>
         <el-form-item label="分类">
-          <el-input v-model="bf.cat" placeholder="分类名称" />
+          <el-select v-model="bf.cat" placeholder="选择分类" style="width: 100%">
+            <el-option v-for="c in allCategories" :key="c" :label="c" :value="c" />
+          </el-select>
         </el-form-item>
         <el-form-item label="金额">
           <el-input-number v-model="bf.amt" :precision="2" :min="0.01" style="width: 100%" />
@@ -98,13 +100,19 @@
  * 预算管理页面
  * 按年月查看预算汇总（含进度条和超支预警），支持添加新预算
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { fmt } from '../api'
 import { getBudgetSummary, createBudget } from '../api/budget'
 import { useStore } from '../composables/useStore'
 
-const { years } = useStore()
+const { years, catTree, loadCats } = useStore()
+
+const allCategories = computed(() => {
+  const incomeCats = Object.keys(catTree.value.income || {})
+  const expenseCats = Object.keys(catTree.value.expense || {})
+  return [...new Set([...incomeCats, ...expenseCats])]
+})
 
 const by = ref(new Date().getFullYear())  // 选中年份
 const bm = ref(new Date().getMonth() + 1) // 选中月份
@@ -147,5 +155,6 @@ const saveBudget = async () => {
 
 onMounted(() => {
   loadBudget()
+  loadCats()
 })
 </script>
