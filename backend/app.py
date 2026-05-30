@@ -16,7 +16,6 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 # 启用跨域支持，允许前端开发服务器跨域访问
 CORS(app)
-# 注册 API 蓝图，所有接口以 /api 为前缀
 app.register_blueprint(api)
 
 if __name__ == "__main__":

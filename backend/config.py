@@ -16,7 +16,7 @@ DB_PASS = os.getenv('DB_PASS', '123456')             # 数据库密码
 DB_NAME = os.getenv('DB_NAME', 'finance_manager')      # 数据库名称
 
 # ========== Flask 应用配置 ==========
-SECRET_KEY = os.getenv('SECRET_KEY', 'finance-manager-secret-key-2024')  # 密钥
+SECRET_KEY = os.getenv('SECRET_KEY', 'finance-manager-secret-key-2026')  # 密钥
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')      # 调试模式
 HOST = os.getenv('HOST', '0.0.0.0')   # 监听所有网络接口
 PORT = int(os.getenv('PORT', 5000))   # 服务端口号
