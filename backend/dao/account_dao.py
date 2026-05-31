@@ -33,8 +33,8 @@ class AccountDAO:
         try:
             c = conn.cursor()
             c.execute("SELECT * FROM accounts WHERE id=%s", (aid,))
-            r = c.fetchone()
-            return dict(r) if r else None
+            row = c.fetchone()
+            return dict(row) if row else None
         finally:
             if own_conn:
                 conn.close()

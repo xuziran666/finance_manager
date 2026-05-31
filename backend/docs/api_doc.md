@@ -1,7 +1,7 @@
 # 财务管理系统 - API 接口文档
 
 > 基础URL：`http://localhost:5000`（默认）
->
+> 
 > 所有 API 以 `/api` 为前缀，响应格式统一为 JSON。
 
 ---
@@ -9,6 +9,7 @@
 ## 一、通用响应格式
 
 ### ✅ 成功响应
+
 ```json
 {
     "code": 200,
@@ -18,6 +19,7 @@
 ```
 
 ### ❌ 失败响应
+
 ```json
 {
     "code": 400,
@@ -25,11 +27,11 @@
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `code` | int | 状态码（200=成功，400=业务错误） |
-| `data` | object/array | 响应数据（成功时返回） |
-| `msg` | string | 提示信息 |
+| 字段     | 类型           | 说明                   |
+| ------ | ------------ | -------------------- |
+| `code` | int          | 状态码（200=成功，400=业务错误） |
+| `data` | object/array | 响应数据（成功时返回）          |
+| `msg`  | string       | 提示信息                 |
 
 ---
 
@@ -42,6 +44,7 @@
 **请求参数：** 无
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -73,13 +76,14 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | string | 是 | 账户名称 |
-| `type` | string | 是 | 账户类型（如：cash, bank, alipay, wechat） |
-| `balance` | number | 否 | 初始余额，默认 0，不能为负 |
+| 字段        | 类型     | 必填  | 说明                                 |
+| --------- | ------ | --- | ---------------------------------- |
+| `name`    | string | 是   | 账户名称                               |
+| `type`    | string | 是   | 账户类型（如：cash, bank, alipay, wechat） |
+| `balance` | number | 否   | 初始余额，默认 0，不能为负                     |
 
 **请求示例：**
+
 ```json
 {
     "name": "储蓄卡",
@@ -89,6 +93,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -111,18 +116,19 @@
 
 **路径参数：**
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数   | 类型  | 说明   |
+| ---- | --- | ---- |
 | `id` | int | 账户ID |
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | string | 否 | 新名称 |
-| `type` | string | 否 | 新类型 |
+| 字段     | 类型     | 必填  | 说明  |
+| ------ | ------ | --- | --- |
+| `name` | string | 否   | 新名称 |
+| `type` | string | 否   | 新类型 |
 
 **请求示例：**
+
 ```json
 {
     "name": "工资储蓄卡",
@@ -131,6 +137,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -153,11 +160,12 @@
 
 **路径参数：**
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数   | 类型  | 说明   |
+| ---- | --- | ---- |
 | `id` | int | 账户ID |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -178,16 +186,17 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `account_id` | int | 否 | | 按账户筛选 |
-| `start_date` | string | 否 | | 起始日期（>=），格式：`YYYY-MM-DD` |
-| `end_date` | string | 否 | | 结束日期（<=），格式：`YYYY-MM-DD` |
-| `category` | string | 否 | | 按分类筛选 |
-| `page` | int | 否 | 1 | 页码 |
-| `page_size` | int | 否 | 20 | 每页条数 |
+| 参数           | 类型     | 必填  | 默认值 | 说明                       |
+| ------------ | ------ | --- | --- | ------------------------ |
+| `account_id` | int    | 否   |     | 按账户筛选                    |
+| `start_date` | string | 否   |     | 起始日期（>=），格式：`YYYY-MM-DD` |
+| `end_date`   | string | 否   |     | 结束日期（<=），格式：`YYYY-MM-DD` |
+| `category`   | string | 否   |     | 按分类筛选                    |
+| `page`       | int    | 否   | 1   | 页码                       |
+| `page_size`  | int    | 否   | 20  | 每页条数                     |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -216,13 +225,13 @@
 }
 ```
 
-| 响应字段 | 类型 | 说明 |
-|----------|------|------|
-| `transactions` | array | 交易记录列表 |
-| `total` | int | 符合条件的总记录数 |
-| `page` | int | 当前页码 |
-| `page_size` | int | 每页条数 |
-| `total_pages` | int | 总页数 |
+| 响应字段           | 类型    | 说明        |
+| -------------- | ----- | --------- |
+| `transactions` | array | 交易记录列表    |
+| `total`        | int   | 符合条件的总记录数 |
+| `page`         | int   | 当前页码      |
+| `page_size`    | int   | 每页条数      |
+| `total_pages`  | int   | 总页数       |
 
 ---
 
@@ -232,17 +241,18 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `account_id` | int | 是 | | 账户ID |
-| `type` | string | 是 | | 类型：`income`（收入）/ `expense`（支出） |
-| `category` | string | 是 | | 分类名称 |
-| `amount` | number | 是 | | 金额，不能为负 |
-| `note` | string | 否 | "" | 备注 |
-| `date` | string | 否 | 当天 | 日期，格式：`YYYY-MM-DD` |
-| `subcategory` | string | 否 | "" | 二级分类名称 |
+| 字段            | 类型     | 必填  | 默认值 | 说明                             |
+| ------------- | ------ | --- | --- | ------------------------------ |
+| `account_id`  | int    | 是   |     | 账户ID                           |
+| `type`        | string | 是   |     | 类型：`income`（收入）/ `expense`（支出） |
+| `category`    | string | 是   |     | 分类名称                           |
+| `amount`      | number | 是   |     | 金额，不能为负                        |
+| `note`        | string | 否   | ""  | 备注                             |
+| `date`        | string | 否   | 当天  | 日期，格式：`YYYY-MM-DD`             |
+| `subcategory` | string | 否   | ""  | 二级分类名称                         |
 
 **请求示例：**
+
 ```json
 {
     "account_id": 1,
@@ -256,6 +266,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -287,14 +298,15 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `from_account` | int | 是 | | 转出账户ID |
-| `to_account` | int | 是 | | 转入账户ID |
-| `amount` | number | 是 | | 转账金额，必须 > 0 |
-| `note` | string | 否 | "" | 转账备注 |
+| 字段             | 类型     | 必填  | 默认值 | 说明          |
+| -------------- | ------ | --- | --- | ----------- |
+| `from_account` | int    | 是   |     | 转出账户ID      |
+| `to_account`   | int    | 是   |     | 转入账户ID      |
+| `amount`       | number | 是   |     | 转账金额，必须 > 0 |
+| `note`         | string | 否   | ""  | 转账备注        |
 
 **请求示例：**
+
 ```json
 {
     "from_account": 1,
@@ -305,6 +317,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -314,6 +327,7 @@
 ```
 
 **校验规则：**
+
 - 转出和转入账户不能相同
 - 转出账户余额必须 ≥ 转账金额
 - 金额必须 > 0
@@ -326,20 +340,22 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `account_id` | int | 否 | 按账户筛选 |
-| `start_date` | string | 否 | 起始日期 |
-| `end_date` | string | 否 | 结束日期 |
+| 参数           | 类型     | 必填  | 说明    |
+| ------------ | ------ | --- | ----- |
+| `account_id` | int    | 否   | 按账户筛选 |
+| `start_date` | string | 否   | 起始日期  |
+| `end_date`   | string | 否   | 结束日期  |
 
 **响应：** 返回 CSV 文件（`Content-Type: text/csv;charset=utf-8`）
 
 **CSV 列头：**
+
 ```
 日期,类型,分类,二级分类,金额,账户,备注
 ```
 
 **导出示例：**
+
 ```
 日期,类型,分类,二级分类,金额,账户,备注
 2026-05-20,支出,餐饮,午餐,25.00,工资卡,食堂
@@ -357,6 +373,7 @@
 **请求参数：** 无
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -396,10 +413,10 @@
 }
 ```
 
-| 响应字段 | 类型 | 说明 |
-|----------|------|------|
-| `tree` | object | 树形结构：type → main → [sub, ...] |
-| `flat` | array | 扁平列表，每条记录包含 id, type, main, sub |
+| 响应字段   | 类型     | 说明                              |
+| ------ | ------ | ------------------------------- |
+| `tree` | object | 树形结构：type → main → [sub, ...]   |
+| `flat` | array  | 扁平列表，每条记录包含 id, type, main, sub |
 
 ---
 
@@ -409,13 +426,14 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `type` | string | 是 | | 类型：`income` / `expense` |
-| `main` | string | 是 | | 主分类名称 |
-| `sub` | string | 否 | "" | 二级分类名称 |
+| 字段     | 类型     | 必填  | 默认值 | 说明                      |
+| ------ | ------ | --- | --- | ----------------------- |
+| `type` | string | 是   |     | 类型：`income` / `expense` |
+| `main` | string | 是   |     | 主分类名称                   |
+| `sub`  | string | 否   | ""  | 二级分类名称                  |
 
 **请求示例：**
+
 ```json
 {
     "type": "expense",
@@ -425,6 +443,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -443,16 +462,17 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `old_type` | string | 是 | 原类型 |
-| `old_main` | string | 是 | 原主分类 |
-| `old_sub` | string | 是 | 原二级分类 |
-| `new_type` | string | 是 | 新类型 |
-| `new_main` | string | 是 | 新主分类 |
-| `new_sub` | string | 是 | 新二级分类 |
+| 字段         | 类型     | 必填  | 说明    |
+| ---------- | ------ | --- | ----- |
+| `old_type` | string | 是   | 原类型   |
+| `old_main` | string | 是   | 原主分类  |
+| `old_sub`  | string | 是   | 原二级分类 |
+| `new_type` | string | 是   | 新类型   |
+| `new_main` | string | 是   | 新主分类  |
+| `new_sub`  | string | 是   | 新二级分类 |
 
 **请求示例：**
+
 ```json
 {
     "old_type": "expense",
@@ -465,6 +485,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -481,13 +502,14 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `type` | string | 是 | | 类型 |
-| `main` | string | 是 | | 主分类 |
-| `sub` | string | 否 | "" | 二级分类 |
+| 字段     | 类型     | 必填  | 默认值 | 说明   |
+| ------ | ------ | --- | --- | ---- |
+| `type` | string | 是   |     | 类型   |
+| `main` | string | 是   |     | 主分类  |
+| `sub`  | string | 否   | ""  | 二级分类 |
 
 **请求示例：**
+
 ```json
 {
     "type": "expense",
@@ -497,6 +519,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -515,12 +538,13 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `year` | int | 否 | 年份，不传则查所有年份 |
-| `month` | int | 否 | 月份（1-12），不传则查所有月份 |
+| 参数      | 类型  | 必填  | 说明                |
+| ------- | --- | --- | ----------------- |
+| `year`  | int | 否   | 年份，不传则查所有年份       |
+| `month` | int | 否   | 月份（1-12），不传则查所有月份 |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -556,14 +580,15 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `year` | int | 是 | 年份 |
-| `month` | int | 是 | 月份（1-12） |
-| `category` | string | 是 | 分类名称 |
-| `amount` | number | 是 | 预算金额，不能为负 |
+| 字段         | 类型     | 必填  | 说明        |
+| ---------- | ------ | --- | --------- |
+| `year`     | int    | 是   | 年份        |
+| `month`    | int    | 是   | 月份（1-12）  |
+| `category` | string | 是   | 分类名称      |
+| `amount`   | number | 是   | 预算金额，不能为负 |
 
 **请求示例：**
+
 ```json
 {
     "year": 2026,
@@ -574,6 +599,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -590,12 +616,13 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `year` | int | 否 | 当前年 | 年份 |
-| `month` | int | 否 | 当前月 | 月份 |
+| 参数      | 类型  | 必填  | 默认值 | 说明  |
+| ------- | --- | --- | --- | --- |
+| `year`  | int | 否   | 当前年 | 年份  |
+| `month` | int | 否   | 当前月 | 月份  |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -635,15 +662,15 @@
 }
 ```
 
-| 汇总字段 | 类型 | 说明 |
-|----------|------|------|
-| `category` | string | 分类名称，最后一条为"总计" |
-| `budget` | number | 预算金额 |
-| `spent` | number | 实际花费 |
-| `remaining` | number | 剩余预算 |
-| `percentage` | number | 花费百分比（0-100） |
-| `status` | string | 状态：`normal`（正常）/ `overspent`（超支） |
-| `warnings` | array | 预警列表（超支或使用达 80%+ 时提示） |
+| 汇总字段         | 类型     | 说明                               |
+| ------------ | ------ | -------------------------------- |
+| `category`   | string | 分类名称，最后一条为"总计"                   |
+| `budget`     | number | 预算金额                             |
+| `spent`      | number | 实际花费                             |
+| `remaining`  | number | 剩余预算                             |
+| `percentage` | number | 花费百分比（0-100）                     |
+| `status`     | string | 状态：`normal`（正常）/ `overspent`（超支） |
+| `warnings`   | array  | 预警列表（超支或使用达 80%+ 时提示）            |
 
 ---
 
@@ -653,13 +680,14 @@
 
 **请求体（JSON）：**
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `year` | int | 是 | | 年份 |
-| `month` | int | 是 | | 月份 |
-| `category` | string | 否 | "" | 分类名称（不传则删除该月全部） |
+| 字段         | 类型     | 必填  | 默认值 | 说明              |
+| ---------- | ------ | --- | --- | --------------- |
+| `year`     | int    | 是   |     | 年份              |
+| `month`    | int    | 是   |     | 月份              |
+| `category` | string | 否   | ""  | 分类名称（不传则删除该月全部） |
 
 **请求示例：**
+
 ```json
 {
     "year": 2026,
@@ -669,6 +697,7 @@
 ```
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -687,14 +716,15 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `account_id` | int | 否 | | 按账户筛选 |
-| `start_date` | string | 否 | | 起始日期，格式：`YYYY-MM-DD` |
-| `end_date` | string | 否 | | 结束日期，格式：`YYYY-MM-DD` |
-| `group_by` | string | 否 | `month` | 时间分组方式：`year`（年）/ `month`（月）/ `day`（日）/ `week`（周） |
+| 参数           | 类型     | 必填  | 默认值     | 说明                                                |
+| ------------ | ------ | --- | ------- | ------------------------------------------------- |
+| `account_id` | int    | 否   |         | 按账户筛选                                             |
+| `start_date` | string | 否   |         | 起始日期，格式：`YYYY-MM-DD`                              |
+| `end_date`   | string | 否   |         | 结束日期，格式：`YYYY-MM-DD`                              |
+| `group_by`   | string | 否   | `month` | 时间分组方式：`year`（年）/ `month`（月）/ `day`（日）/ `week`（周） |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -730,18 +760,18 @@
 }
 ```
 
-| 响应字段 | 类型 | 说明 |
-|----------|------|------|
-| `total_income` | number | 总收入 |
-| `total_expense` | number | 总支出 |
-| `balance` | number | 结余（收入-支出） |
-| `trend` | array | 按时间分组趋势 |
-| `trend[].period` | string | 时间周期（如：2026-01） |
-| `trend[].income` | number | 该周期收入 |
-| `trend[].expense` | number | 该周期支出 |
-| `trend[].balance` | number | 该周期结余 |
-| `expense_by_category` | array | 支出按分类汇总（降序） |
-| `income_by_category` | array | 收入按分类汇总（降序） |
+| 响应字段                  | 类型     | 说明              |
+| --------------------- | ------ | --------------- |
+| `total_income`        | number | 总收入             |
+| `total_expense`       | number | 总支出             |
+| `balance`             | number | 结余（收入-支出）       |
+| `trend`               | array  | 按时间分组趋势         |
+| `trend[].period`      | string | 时间周期（如：2026-01） |
+| `trend[].income`      | number | 该周期收入           |
+| `trend[].expense`     | number | 该周期支出           |
+| `trend[].balance`     | number | 该周期结余           |
+| `expense_by_category` | array  | 支出按分类汇总（降序）     |
+| `income_by_category`  | array  | 收入按分类汇总（降序）     |
 
 ---
 
@@ -753,11 +783,12 @@
 
 **查询参数（Query String）：**
 
-| 参数 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `limit` | int | 否 | 100 | 返回记录条数上限 |
+| 参数      | 类型  | 必填  | 默认值 | 说明       |
+| ------- | --- | --- | --- | -------- |
+| `limit` | int | 否   | 100 | 返回记录条数上限 |
 
 **响应示例：**
+
 ```json
 {
     "code": 200,
@@ -783,39 +814,39 @@
 
 **action 枚举值说明：**
 
-| action 值 | 说明 |
-|-----------|------|
-| `ADD_ACCOUNT` | 添加账户 |
-| `UPDATE_ACCOUNT` | 更新账户 |
-| `DELETE_ACCOUNT` | 删除账户 |
-| `ADD_TRANSACTION` | 添加交易记录 |
-| `TRANSFER` | 转账 |
-| `SET_BUDGET` | 设置/更新预算 |
-| `ADD_CATEGORY` | 添加分类 |
-| `UPDATE_CATEGORY` | 更新分类 |
-| `DELETE_CATEGORY` | 删除分类 |
+| action 值          | 说明      |
+| ----------------- | ------- |
+| `ADD_ACCOUNT`     | 添加账户    |
+| `UPDATE_ACCOUNT`  | 更新账户    |
+| `DELETE_ACCOUNT`  | 删除账户    |
+| `ADD_TRANSACTION` | 添加交易记录  |
+| `TRANSFER`        | 转账      |
+| `SET_BUDGET`      | 设置/更新预算 |
+| `ADD_CATEGORY`    | 添加分类    |
+| `UPDATE_CATEGORY` | 更新分类    |
+| `DELETE_CATEGORY` | 删除分类    |
 
 ---
 
 ## 八、接口总览表
 
-| 序号 | 方法 | 路径 | 说明 |
-|------|------|------|------|
-| 1 | GET    | `/api/accounts`               | 获取所有账户列表         |
-| 2 | POST   | `/api/accounts`               | 添加账户                 |
-| 3 | PUT    | `/api/accounts/{id}`          | 更新账户                 |
-| 4 | DELETE | `/api/accounts/{id}`          | 删除账户                 |
-| 5 | GET    | `/api/transactions`           | 获取交易记录列表（分页） |
-| 6 | POST   | `/api/transactions`           | 添加交易记录             |
-| 7 | POST   | `/api/transactions/transfer`  | 转账                     |
-| 8 | GET    | `/api/transactions/export`    | 导出交易记录为CSV        |
-| 9 | GET    | `/api/categories`             | 获取所有分类（树形+扁平）|
-| 10 | POST   | `/api/categories`            | 添加分类                 |
-| 11 | PUT    | `/api/categories`            | 修改分类                 |
-| 12 | DELETE | `/api/categories`            | 删除分类                 |
-| 13 | GET    | `/api/budgets`               | 获取预算列表             |
-| 14 | POST   | `/api/budgets`               | 设置预算                 |
-| 15 | GET    | `/api/budgets/summary`       | 预算汇总（含预警）       |
-| 16 | DELETE | `/api/budgets`               | 删除预算                 |
-| 17 | GET    | `/api/statistics`            | 统计数据                 |
-| 18 | GET    | `/api/logs`                  | 操作日志                 |
+| 序号  | 方法     | 路径                           | 说明            |
+| --- | ------ | ---------------------------- | ------------- |
+| 1   | GET    | `/api/accounts`              | 获取所有账户列表      |
+| 2   | POST   | `/api/accounts`              | 添加账户          |
+| 3   | PUT    | `/api/accounts/{id}`         | 更新账户          |
+| 4   | DELETE | `/api/accounts/{id}`         | 删除账户          |
+| 5   | GET    | `/api/transactions`          | 获取交易记录列表（分页）  |
+| 6   | POST   | `/api/transactions`          | 添加交易记录        |
+| 7   | POST   | `/api/transactions/transfer` | 转账            |
+| 8   | GET    | `/api/transactions/export`   | 导出交易记录为CSV    |
+| 9   | GET    | `/api/categories`            | 获取所有分类（树形+扁平） |
+| 10  | POST   | `/api/categories`            | 添加分类          |
+| 11  | PUT    | `/api/categories`            | 修改分类          |
+| 12  | DELETE | `/api/categories`            | 删除分类          |
+| 13  | GET    | `/api/budgets`               | 获取预算列表        |
+| 14  | POST   | `/api/budgets`               | 设置预算          |
+| 15  | GET    | `/api/budgets/summary`       | 预算汇总（含预警）     |
+| 16  | DELETE | `/api/budgets`               | 删除预算          |
+| 17  | GET    | `/api/statistics`            | 统计数据          |
+| 18  | GET    | `/api/logs`                  | 操作日志          |

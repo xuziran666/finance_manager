@@ -6,6 +6,60 @@ class CategoryDAO:
     """分类数据访问对象，提供分类表的增删改查与树形结构生成方法"""
 
     @staticmethod
+    def create(type_, main, sub="", conn=None):
+        """插入新分类记录"""
+        own_conn = False
+        if conn is None:
+            conn = get_connection()
+            own_conn = True
+        try:
+            c = conn.cursor()
+            c.execute("INSERT INTO categories (type,main,sub) VALUES (%s,%s,%s)", (type_, main, sub))
+            if own_conn:
+                conn.commit()
+        finally:
+            if own_conn:
+                conn.close()
+
+    @staticmethod
+    def delete(type_, main, sub="", conn=None):
+        """删除指定分类，返回是否删除成功（主分类时级联删除其下所有子分类）"""
+        own_conn = False
+        if conn is None:
+            conn = get_connection()
+            own_conn = True
+        try:
+            c = conn.cursor()
+            if sub == "":
+                c.execute("DELETE FROM categories WHERE type=%s AND main=%s", (type_, main))
+            else:
+                c.execute("DELETE FROM categories WHERE type=%s AND main=%s AND sub=%s", (type_, main, sub))
+            if own_conn:
+                conn.commit()
+            return c.rowcount > 0
+        finally:
+            if own_conn:
+                conn.close()
+
+    @staticmethod
+    def update(old_type, old_main, old_sub, new_type, new_main, new_sub, conn=None):
+        """修改分类（type/main/sub 均可更改），返回是否更新成功"""
+        own_conn = False
+        if conn is None:
+            conn = get_connection()
+            own_conn = True
+        try:
+            c = conn.cursor()
+            c.execute("UPDATE categories SET type=%s,main=%s,sub=%s WHERE type=%s AND main=%s AND sub=%s",
+                      (new_type, new_main, new_sub, old_type, old_main, old_sub))
+            if own_conn:
+                conn.commit()
+            return c.rowcount > 0
+        finally:
+            if own_conn:
+                conn.close()
+
+    @staticmethod
     def get_all(conn=None):
         """获取全部分类列表，按类型/主分类/子分类排序"""
         own_conn = False
@@ -29,13 +83,13 @@ class CategoryDAO:
         cats = CategoryDAO.get_all(conn=conn)
         tree = {"income": {}, "expense": {}}
         for cat in cats:
-            tp = cat["type"]
-            m = cat["main"]
-            s = cat["sub"]
-            if m not in tree[tp]:
-                tree[tp][m] = []
-            if s:
-                tree[tp][m].append(s)
+            cat_type = cat["type"]
+            cat_main = cat["main"]
+            cat_sub = cat["sub"]
+            if cat_main not in tree[cat_type]:
+                tree[cat_type][cat_main] = []
+            if cat_sub:
+                tree[cat_type][cat_main].append(cat_sub)
         return tree
 
     @staticmethod
@@ -50,57 +104,6 @@ class CategoryDAO:
             c.execute("SELECT COUNT(*) AS count FROM categories WHERE type=%s AND main=%s AND sub=%s",
                       (type_, main, sub))
             return c.fetchone()['count'] > 0
-        finally:
-            if own_conn:
-                conn.close()
-
-    @staticmethod
-    def create(type_, main, sub="", conn=None):
-        """插入新分类记录"""
-        own_conn = False
-        if conn is None:
-            conn = get_connection()
-            own_conn = True
-        try:
-            c = conn.cursor()
-            c.execute("INSERT INTO categories (type,main,sub) VALUES (%s,%s,%s)", (type_, main, sub))
-            if own_conn:
-                conn.commit()
-        finally:
-            if own_conn:
-                conn.close()
-
-    @staticmethod
-    def update(ot, om, os_, nt, nm, ns_, conn=None):
-        """修改分类（type/main/sub 均可更改），返回是否更新成功"""
-        own_conn = False
-        if conn is None:
-            conn = get_connection()
-            own_conn = True
-        try:
-            c = conn.cursor()
-            c.execute("UPDATE categories SET type=%s,main=%s,sub=%s WHERE type=%s AND main=%s AND sub=%s",
-                      (nt, nm, ns_, ot, om, os_))
-            if own_conn:
-                conn.commit()
-            return c.rowcount > 0
-        finally:
-            if own_conn:
-                conn.close()
-
-    @staticmethod
-    def delete(type_, main, sub="", conn=None):
-        """删除指定分类，返回是否删除成功"""
-        own_conn = False
-        if conn is None:
-            conn = get_connection()
-            own_conn = True
-        try:
-            c = conn.cursor()
-            c.execute("DELETE FROM categories WHERE type=%s AND main=%s AND sub=%s", (type_, main, sub))
-            if own_conn:
-                conn.commit()
-            return c.rowcount > 0
         finally:
             if own_conn:
                 conn.close()

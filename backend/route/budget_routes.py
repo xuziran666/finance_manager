@@ -8,26 +8,8 @@ from route.result import Result
 def init_budget_routes(api):
     """注册预算相关路由到指定的 Blueprint 对象"""
 
-    @api.route("/budgets", methods=["GET"])
-    def gb():
-        """GET /api/budgets — 获取预算列表，可按年月筛选"""
-        return Result.success(BudgetService.get_all(
-            request.args.get("year", type=int),
-            request.args.get("month", type=int)
-        ))
-
-    @api.route("/budgets", methods=["POST"])
-    def sb():
-        """POST /api/budgets — 设置预算（若已存在则覆盖更新金额）"""
-        d = request.json
-        succ, r = BudgetService.set(
-            d.get("year"), d.get("month"),
-            d.get("category"), d.get("amount")
-        )
-        return Result.success(msg=r) if succ else Result.fail(r)
-
     @api.route("/budgets/summary", methods=["GET"])
-    def bs():
+    def get_budget_summary():
         """GET /api/budgets/summary — 预算汇总，含实际花费对比和超支预警"""
         now = datetime.now()
         return Result.success(BudgetService.get_summary(
@@ -36,8 +18,26 @@ def init_budget_routes(api):
         ))
 
     @api.route("/budgets", methods=["DELETE"])
-    def db():
+    def delete_budget():
         """DELETE /api/budgets — 删除指定预算"""
-        d = request.json
-        BudgetService.delete(d.get("year"), d.get("month"), d.get("category", ""))
+        data = request.json
+        BudgetService.delete(data.get("year"), data.get("month"), data.get("category", ""))
         return Result.success(msg="删除成功")
+
+    @api.route("/budgets", methods=["POST"])
+    def set_budget():
+        """POST /api/budgets — 设置预算（若已存在则覆盖更新金额）"""
+        data = request.json
+        ok, msg = BudgetService.set(
+            data.get("year"), data.get("month"),
+            data.get("category"), data.get("amount")
+        )
+        return Result.success(msg=msg) if ok else Result.fail(msg)
+
+    @api.route("/budgets", methods=["GET"])
+    def get_budgets():
+        """GET /api/budgets — 获取预算列表，可按年月筛选"""
+        return Result.success(BudgetService.get_all(
+            request.args.get("year", type=int),
+            request.args.get("month", type=int)
+        ))

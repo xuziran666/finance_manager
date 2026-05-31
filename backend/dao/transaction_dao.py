@@ -18,31 +18,30 @@ class TransactionDAO:
             own_conn = True
         try:
             c = conn.cursor()
-            wh = ["1=1"]
+            where_conditions = ["1=1"]
             params = []
             if account_id:
-                wh.append("t.account_id=%s")
+                where_conditions.append("t.account_id=%s")
                 params.append(account_id)
             if start_date:
-                wh.append("t.date>=%s")
+                where_conditions.append("t.date>=%s")
                 params.append(start_date)
             if end_date:
-                wh.append("t.date<=%s")
+                where_conditions.append("t.date<=%s")
                 params.append(end_date)
             if category:
-                wh.append("t.category=%s")
+                where_conditions.append("t.category=%s")
                 params.append(category)
-            wsql = " AND ".join(wh)
-            # 查询符合条件的总记录数
-            c.execute(f"SELECT COUNT(*) AS count FROM transactions t WHERE {wsql}", params)
+            where_clause = " AND ".join(where_conditions)
+            c.execute(f"SELECT COUNT(*) AS count FROM transactions t WHERE {where_clause}", params)
             total = c.fetchone()['count']
-            off = (page - 1) * page_size
+            offset = (page - 1) * page_size
             # 查询当前页数据，同时关联账户表获取账户名称和类型
             c.execute(
                 f"SELECT t.*,a.name as account_name,a.type as account_type "
                 f"FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id "
-                f"WHERE {wsql} ORDER BY t.date DESC,t.id DESC LIMIT %s OFFSET %s",
-                params + [page_size, off]
+                f"WHERE {where_clause} ORDER BY t.date DESC,t.id DESC LIMIT %s OFFSET %s",
+                params + [page_size, offset]
             )
             return {
                 "transactions": [dict(r) for r in c.fetchall()],
@@ -73,23 +72,22 @@ class TransactionDAO:
                 "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                 (account_id, type_, category, subcategory, amount, note, date, now)
             )
-            tid = c.lastrowid
-            # 更新账户余额
+            transaction_id = c.lastrowid
             c.execute("SELECT balance FROM accounts WHERE id=%s", (account_id,))
             row = c.fetchone()
             if row:
-                bal = float(row["balance"])
-                bal = bal + amount if type_ == "income" else bal - amount
-                c.execute("UPDATE accounts SET balance=%s WHERE id=%s", (bal, account_id))
+                balance = float(row["balance"])
+                balance = balance + amount if type_ == "income" else balance - amount
+                c.execute("UPDATE accounts SET balance=%s WHERE id=%s", (balance, account_id))
             if own_conn:
                 conn.commit()
-            return TransactionDAO.get_by_id(tid, conn=conn)
+            return TransactionDAO.get_by_id(transaction_id, conn=conn)
         finally:
             if own_conn:
                 conn.close()
 
     @staticmethod
-    def get_by_id(tid, conn=None):
+    def get_by_id(transaction_id, conn=None):
         """根据主键 ID 查询单条交易记录（含账户信息）"""
         own_conn = False
         if conn is None:
@@ -100,10 +98,10 @@ class TransactionDAO:
             c.execute(
                 "SELECT t.*,a.name as account_name,a.type as account_type "
                 "FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id WHERE t.id=%s",
-                (tid,)
+                (transaction_id,)
             )
-            r = c.fetchone()
-            return dict(r) if r else None
+            row = c.fetchone()
+            return dict(row) if row else None
         finally:
             if own_conn:
                 conn.close()

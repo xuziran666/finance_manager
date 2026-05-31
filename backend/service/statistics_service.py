@@ -8,95 +8,92 @@ class StatisticsService:
     """统计服务类，提供各类财务数据统计分析"""
 
     @staticmethod
-    def get(aid=None, sd=None, ed=None, gb="month"):
+    def get(account_id=None, start_date=None, end_date=None, group_by="month"):
         """
         获取统计数据
         参数：
-            aid — 账户 ID（可选）
-            sd  — 开始日期（可选）
-            ed  — 结束日期（可选）
-            gb  — 时间分组方式（year/month/day/week）
+            account_id — 账户 ID（可选）
+            start_date — 开始日期（可选）
+            end_date   — 结束日期（可选）
+            group_by   — 时间分组方式（year/month/day/week）
         返回：
             total_income / total_expense / balance — 汇总数据
             trend — 按时间维度的趋势数据
             expense_by_category / income_by_category — 分类汇总（降序）
         """
-        r = TransactionDAO.get_all(account_id=aid, page_size=99999)
-        txns = r["transactions"]
-        # 应用日期筛选
-        if sd:
-            txns = [t for t in txns if str(t.get("date", "")) >= sd]
-        if ed:
-            txns = [t for t in txns if str(t.get("date", "")) <= ed]
-        ti = sum(float(t["amount"]) for t in txns if t["type"] == "income")
-        te = sum(float(t["amount"]) for t in txns if t["type"] == "expense")
-        # 按时间分组统计趋势
-        ig = defaultdict(float)
-        eg = defaultdict(float)
-        for t in txns:
-            gk = StatisticsService._gk(t.get("date", ""), gb)
-            am = float(t["amount"])
+        result = TransactionDAO.get_all(account_id=account_id, page_size=99999)
+        transactions = result["transactions"]
+        if start_date:
+            transactions = [t for t in transactions if str(t.get("date", "")) >= start_date]
+        if end_date:
+            transactions = [t for t in transactions if str(t.get("date", "")) <= end_date]
+        total_income = sum(float(t["amount"]) for t in transactions if t["type"] == "income")
+        total_expense = sum(float(t["amount"]) for t in transactions if t["type"] == "expense")
+        income_grouped = defaultdict(float)
+        expense_grouped = defaultdict(float)
+        for t in transactions:
+            group_key = StatisticsService._get_group_key(t.get("date", ""), group_by)
+            amount = float(t["amount"])
             if t["type"] == "income":
-                ig[gk] += am
+                income_grouped[group_key] += amount
             else:
-                eg[gk] += am
-        ag = sorted(set(list(ig.keys()) + list(eg.keys())))
+                expense_grouped[group_key] += amount
+        all_groups = sorted(set(list(income_grouped.keys()) + list(expense_grouped.keys())))
         trend = [{
-            "period": g, "income": round(ig.get(g, 0), 2),
-            "expense": round(eg.get(g, 0), 2),
-            "balance": round(ig.get(g, 0) - eg.get(g, 0), 2)
-        } for g in ag]
-        # 按分类和账户汇总
-        ec = defaultdict(float)
-        ic = defaultdict(float)
-        ea = defaultdict(float)
-        ia = defaultdict(float)
-        for t in txns:
-            am = float(t["amount"])
+            "period": g, "income": round(income_grouped.get(g, 0), 2),
+            "expense": round(expense_grouped.get(g, 0), 2),
+            "balance": round(income_grouped.get(g, 0) - expense_grouped.get(g, 0), 2)
+        } for g in all_groups]
+        expense_by_category = defaultdict(float)
+        income_by_category = defaultdict(float)
+        expense_by_account = defaultdict(float)
+        income_by_account = defaultdict(float)
+        for t in transactions:
+            amount = float(t["amount"])
             if t["type"] == "expense":
-                ec[t.get("category", "其他")] += am
-                ea[t.get("account_name", "未知")] += am
+                expense_by_category[t.get("category", "其他")] += amount
+                expense_by_account[t.get("account_name", "未知")] += amount
             else:
-                ic[t.get("category", "其他")] += am
-                ia[t.get("account_name", "未知")] += am
+                income_by_category[t.get("category", "其他")] += amount
+                income_by_account[t.get("account_name", "未知")] += amount
         return {
-            "total_income": round(ti, 2),
-            "total_expense": round(te, 2),
-            "balance": round(ti - te, 2),
+            "total_income": round(total_income, 2),
+            "total_expense": round(total_expense, 2),
+            "balance": round(total_income - total_expense, 2),
             "trend": trend,
             "expense_by_category": [
                 {"name": k, "amount": round(v, 2)}
-                for k, v in sorted(ec.items(), key=lambda x: x[1], reverse=True)
+                for k, v in sorted(expense_by_category.items(), key=lambda x: x[1], reverse=True)
             ],
             "income_by_category": [
                 {"name": k, "amount": round(v, 2)}
-                for k, v in sorted(ic.items(), key=lambda x: x[1], reverse=True)
+                for k, v in sorted(income_by_category.items(), key=lambda x: x[1], reverse=True)
             ],
             "pie_chart": "",
             "line_chart": ""
         }
 
     @staticmethod
-    def _gk(ds, gb):
+    def _get_group_key(date_str, group_by):
         """
         根据日期字符串和分组方式生成时间分组键
         如：2026-05-21, month → "2026-05"
         """
-        if not ds:
+        if not date_str:
             return "未知"
-        if isinstance(ds, (datetime, date)):
-            ds = ds.strftime("%Y-%m-%d")
-        p = ds.split("-")
-        if gb == "year":
-            return p[0]
-        if gb == "month":
-            return f"{p[0]}-{p[1]}"
-        if gb == "day":
-            return ds
-        if gb == "week":
+        if isinstance(date_str, (datetime, date)):
+            date_str = date_str.strftime("%Y-%m-%d")
+        parts = date_str.split("-")
+        if group_by == "year":
+            return parts[0]
+        if group_by == "month":
+            return f"{parts[0]}-{parts[1]}"
+        if group_by == "day":
+            return date_str
+        if group_by == "week":
             try:
-                d = datetime.strptime(ds, "%Y-%m-%d")
-                return (d - timedelta(days=d.weekday())).strftime("%Y-%m-%d")
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+                return (dt - timedelta(days=dt.weekday())).strftime("%Y-%m-%d")
             except:
-                return ds
-        return ds
+                return date_str
+        return date_str

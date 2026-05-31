@@ -8,9 +8,9 @@ class TransactionService:
     """交易服务类，提供交易记录的查询、添加、转账等业务方法"""
 
     @staticmethod
-    def get_all(*a, **k):
+    def get_all(*args, **kwargs):
         """查询交易记录，透传给 TransactionDAO"""
-        return TransactionDAO.get_all(*a, **k)
+        return TransactionDAO.get_all(*args, **kwargs)
 
     @staticmethod
     def add(account_id, type_, category, amount, note="", date=None, subcategory=""):
@@ -32,15 +32,15 @@ class TransactionService:
         except:
             return False, "金额格式错误"
         with connection_scope() as conn:
-            acct = AccountDAO.get_by_id(account_id, conn=conn)
-            if not acct:
+            account = AccountDAO.get_by_id(account_id, conn=conn)
+            if not account:
                 return False, "账户不存在"
-            txn = TransactionDAO.create(account_id, type_, category, amount, note, date, subcategory, conn=conn)
+            transaction = TransactionDAO.create(account_id, type_, category, amount, note, date, subcategory, conn=conn)
             LogDAO.add("ADD_TRANSACTION", f"账户[{account_id}] {type_}:{amount}", conn=conn)
-            return True, txn
+            return True, transaction
 
     @staticmethod
-    def transfer(frm, to_, amount, note=""):
+    def transfer(source_id, target_id, amount, note=""):
         """
         账户间转账
         同时生成一笔转出（支出）和一笔转入（收入）记录
@@ -53,18 +53,18 @@ class TransactionService:
         except:
             return False, "金额格式错误"
         with connection_scope() as conn:
-            fa = AccountDAO.get_by_id(frm, conn=conn)
-            ta = AccountDAO.get_by_id(to_, conn=conn)
-            if not fa or not ta:
+            from_account = AccountDAO.get_by_id(source_id, conn=conn)
+            to_account = AccountDAO.get_by_id(target_id, conn=conn)
+            if not from_account or not to_account:
                 return False, "账户不存在"
-            if frm == to_:
+            if source_id == target_id:
                 return False, "不能转给自己"
-            if fa["balance"] < amount:
-                return False, f"余额不足:{fa['balance']:.2f}"
-            dt = datetime.now().strftime("%Y-%m-%d")
-            n1 = f"转至{ta['name']}:{note}" if note else f"转至{ta['name']}"
-            n2 = f"来自{fa['name']}:{note}" if note else f"来自{fa['name']}"
-            TransactionDAO.create(frm, "expense", "转账", amount, n1, dt, conn=conn)
-            TransactionDAO.create(to_, "income", "转账", amount, n2, dt, conn=conn)
-            LogDAO.add("TRANSFER", f"从{frm}转{amount}到{to_}", conn=conn)
+            if from_account["balance"] < amount:
+                return False, f"余额不足:{from_account['balance']:.2f}"
+            today = datetime.now().strftime("%Y-%m-%d")
+            outgoing_note = f"转至{to_account['name']}:{note}" if note else f"转至{to_account['name']}"
+            incoming_note = f"来自{from_account['name']}:{note}" if note else f"来自{from_account['name']}"
+            TransactionDAO.create(source_id, "expense", "转账", amount, outgoing_note, today, conn=conn)
+            TransactionDAO.create(target_id, "income", "转账", amount, incoming_note, today, conn=conn)
+            LogDAO.add("TRANSFER", f"从{source_id}转{amount}到{target_id}", conn=conn)
             return True, "转账成功"

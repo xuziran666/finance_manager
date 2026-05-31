@@ -80,13 +80,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="tf.cat" placeholder="选择分类" style="width: 100%" @change="tf.subcat = ''">
+          <el-select v-model="tf.cat" placeholder="选择分类" style="width: 100%" filterable @change="onCatChange">
             <el-option v-for="c in mainCats" :key="c" :label="c" :value="c" />
+            <el-option label="✚ 新建分类" value="__new__" />
           </el-select>
         </el-form-item>
-        <el-form-item label="子分类" v-if="subCats.length">
-          <el-select v-model="tf.subcat" placeholder="选择子分类（可选）" style="width: 100%" clearable>
+        <el-form-item label="子分类" v-if="tf.cat">
+          <el-select v-model="tf.subcat" placeholder="选择子分类（可选）" style="width: 100%" clearable @change="onSubcatChange">
             <el-option v-for="s in subCats" :key="s" :label="s" :value="s" />
+            <el-option label="✚ 新建子分类" value="__new_sub__" />
           </el-select>
         </el-form-item>
         <el-form-item label="金额">
@@ -133,8 +135,9 @@
  * 支持按账户/日期筛选、添加收支、转账、CSV 导出、分页展示
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { fmt } from '../api'
+import { createCategory } from '../api/category'
 import { getTransactions, createTransaction, transfer } from '../api/transaction'
 import { useStore } from '../composables/useStore'
 
@@ -150,6 +153,42 @@ const tf = reactive({ acc: '', type: 'expense', cat: '', subcat: '', amt: '', da
 // 根据选择的类型动态获取主分类和子分类
 const mainCats = computed(() => Object.keys(catTree.value[tf.type] || {}))
 const subCats = computed(() => (catTree.value[tf.type]?.[tf.cat]) || [])
+
+/** 分类选择变更处理：检测"新建分类"时弹出输入框 */
+const onCatChange = async (val) => {
+  if (val !== '__new__') {
+    tf.subcat = ''
+    return
+  }
+  // 恢复原值，等创建成功后再更新
+  tf.cat = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入新分类名称', '新建分类', {
+      confirmButtonText: '确定', cancelButtonText: '取消', inputPattern: /\S+/, inputErrorMessage: '名称不能为空'
+    })
+    const r = await createCategory({ type: tf.type, main: value })
+    if (r && r.code === 200) {
+      await loadCats()
+      tf.cat = value
+    }
+  } catch { /* cancelled */ }
+}
+
+/** 子分类选择变更处理 */
+const onSubcatChange = async (val) => {
+  if (val !== '__new_sub__') return
+  tf.subcat = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入子分类名称', '新建子分类', {
+      confirmButtonText: '确定', cancelButtonText: '取消', inputPattern: /\S+/, inputErrorMessage: '名称不能为空'
+    })
+    const r = await createCategory({ type: tf.type, main: tf.cat, sub: value })
+    if (r && r.code === 200) {
+      await loadCats()
+      tf.subcat = value
+    }
+  } catch { /* cancelled */ }
+}
 
 // 转账表单
 const trf = reactive({ from: '', to: '', amt: '' })

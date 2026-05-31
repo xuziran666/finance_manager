@@ -17,3 +17,8 @@ export function createCategory(data) {
 export function updateCategory(data) {
   return request('/api/categories', { method: 'PUT', body: data })
 }
+
+/** 删除分类 */
+export function deleteCategory(data) {
+  return request('/api/categories', { method: 'DELETE', body: data })
+}

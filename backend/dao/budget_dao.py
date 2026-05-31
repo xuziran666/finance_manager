@@ -14,16 +14,16 @@ class BudgetDAO:
             own_conn = True
         try:
             c = conn.cursor()
-            wh = []
+            where_conditions = []
             params = []
             if year:
-                wh.append("year=%s")
+                where_conditions.append("year=%s")
                 params.append(year)
             if month:
-                wh.append("month=%s")
+                where_conditions.append("month=%s")
                 params.append(month)
-            wsql = " AND ".join(wh) if wh else "1=1"
-            c.execute(f"SELECT * FROM budgets WHERE {wsql}", params)
+            where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
+            c.execute(f"SELECT * FROM budgets WHERE {where_clause}", params)
             return [dict(r) for r in c.fetchall()]
         finally:
             if own_conn:
