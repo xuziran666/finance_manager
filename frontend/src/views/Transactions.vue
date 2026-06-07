@@ -35,7 +35,11 @@
     </el-card>
     <el-card shadow="never">
       <el-table :data="txns" stripe style="width: 100%" empty-text="暂无">
-        <el-table-column prop="date" label="日期" width="120" />
+        <el-table-column label="日期" width="175">
+          <template #default="{ row }">
+            {{ row.date?.replace('T', ' ') || row.date }}
+          </template>
+        </el-table-column>
         <el-table-column label="类型" width="80">
           <template #default="{ row }">
             <el-tag :type="row.type === 'income' ? 'success' : 'danger'" size="small" effect="plain">
@@ -52,6 +56,13 @@
           </template>
         </el-table-column>
         <el-table-column prop="account_name" label="账户" />
+        <el-table-column label="操作" width="70" fixed="right">
+          <template #default="{ row }">
+            <el-button type="danger" size="small" plain @click="delTxn(row)">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <div class="flex-center mt-3" v-if="tp > 1">
         <el-pagination
@@ -76,7 +87,7 @@
         </el-form-item>
         <el-form-item label="账户">
           <el-select v-model="tf.acc" placeholder="选择账户" style="width: 100%">
-            <el-option v-for="a in accs" :key="a.id" :label="a.name" :value="a.id" />
+            <el-option v-for="a in accs" :key="a.id" :label="`${a.name}（余额：${fmt(a.balance)}）`" :value="a.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="分类">
@@ -95,7 +106,7 @@
           <el-input-number v-model="tf.amt" :precision="2" :min="0.01" style="width: 100%" />
         </el-form-item>
         <el-form-item label="日期">
-          <el-date-picker v-model="tf.date" type="date" style="width: 100%" value-format="YYYY-MM-DD" />
+          <el-date-picker v-model="tf.date" type="datetime" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -138,7 +149,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fmt } from '../api'
 import { createCategory } from '../api/category'
-import { getTransactions, createTransaction, transfer } from '../api/transaction'
+import { getTransactions, createTransaction, transfer, deleteTransaction } from '../api/transaction'
 import { useStore } from '../composables/useStore'
 
 const { accs, catTree, loadAccs, loadCats } = useStore()
@@ -148,7 +159,8 @@ const tp = ref(1)      // 总页数
 const f = reactive({ acc: '', sd: '', ed: '' })  // 筛选条件
 
 // 新增交易表单
-const tf = reactive({ acc: '', type: 'expense', cat: '', subcat: '', amt: '', date: new Date().toISOString().slice(0, 10) })
+const defNow = () => new Date().toISOString().slice(0, 19).replace('T', ' ')
+const tf = reactive({ acc: '', type: 'expense', cat: '', subcat: '', amt: '', date: defNow() })
 
 // 根据选择的类型动态获取主分类和子分类
 const mainCats = computed(() => Object.keys(catTree.value[tf.type] || {}))
@@ -217,7 +229,7 @@ const openTxn = () => {
   tf.cat = ''
   tf.subcat = ''
   tf.amt = ''
-  tf.date = new Date().toISOString().slice(0, 10)
+  tf.date = defNow()
   txnDialogVisible.value = true
 }
 
@@ -225,6 +237,11 @@ const openTxn = () => {
 const saveTxn = async () => {
   if (!tf.acc || !tf.cat || !tf.amt) {
     ElMessage.warning('请填写完整')
+    return
+  }
+  const acc = accs.value.find(a => a.id === tf.acc)
+  if (tf.type === 'expense' && acc && acc.balance < tf.amt) {
+    ElMessage.warning(`余额不足：${acc.name} 仅剩 ${fmt(acc.balance)}`)
     return
   }
   const r = await createTransaction({ account_id: tf.acc, type: tf.type, category: tf.cat, subcategory: tf.subcat, amount: tf.amt, date: tf.date })
@@ -251,12 +268,32 @@ const doTransfer = async () => {
     ElMessage.warning('不能转给自己')
     return
   }
+  const fromAcc = accs.value.find(a => a.id === trf.from)
+  if (fromAcc && fromAcc.balance < trf.amt) {
+    ElMessage.warning(`余额不足：${fromAcc.name} 仅剩 ${fmt(fromAcc.balance)}`)
+    return
+  }
   const r = await transfer({ from_account: trf.from, to_account: trf.to, amount: trf.amt })
   if (r && r.code === 200) {
     ElMessage.success('转账成功')
     await loadAccs()
     await loadTxns()
     transferDialogVisible.value = false
+  }
+}
+
+/** 删除交易记录 */
+const delTxn = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定删除这笔 ${row.type === 'income' ? '收入' : '支出'} ${fmt(row.amount)} 的记录？`, '确认删除', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+  } catch { return }
+  const r = await deleteTransaction(row.id)
+  if (r && r.code === 200) {
+    ElMessage.success('已删除')
+    await loadTxns()
+    await loadAccs()
   }
 }
 

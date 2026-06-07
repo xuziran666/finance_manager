@@ -17,3 +17,8 @@ export function createTransaction(data) {
 export function transfer(data) {
   return request('/api/transactions/transfer', { method: 'POST', body: data })
 }
+
+/** 删除交易记录 */
+export function deleteTransaction(id) {
+  return request(`/api/transactions/${id}`, { method: 'DELETE' })
+}

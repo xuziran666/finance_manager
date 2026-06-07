@@ -35,9 +35,21 @@ class TransactionService:
             account = AccountDAO.get_by_id(account_id, conn=conn)
             if not account:
                 return False, "账户不存在"
+            if type_ == "expense" and account["balance"] < amount:
+                return False, f"余额不足:{account['balance']:.2f}"
             transaction = TransactionDAO.create(account_id, type_, category, amount, note, date, subcategory, conn=conn)
             LogDAO.add("ADD_TRANSACTION", f"账户[{account_id}] {type_}:{amount}", conn=conn)
             return True, transaction
+
+    @staticmethod
+    def delete(transaction_id):
+        with connection_scope() as conn:
+            txn = TransactionDAO.get_by_id(transaction_id, conn=conn)
+            if not txn:
+                return False, "交易不存在"
+            TransactionDAO.delete(transaction_id, conn=conn)
+            LogDAO.add("DELETE_TRANSACTION", f"删除交易[{transaction_id}]:{txn['type']} {txn['amount']}", conn=conn)
+            return True, "删除成功"
 
     @staticmethod
     def transfer(source_id, target_id, amount, note=""):
@@ -61,7 +73,7 @@ class TransactionService:
                 return False, "不能转给自己"
             if from_account["balance"] < amount:
                 return False, f"余额不足:{from_account['balance']:.2f}"
-            today = datetime.now().strftime("%Y-%m-%d")
+            today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             outgoing_note = f"转至{to_account['name']}:{note}" if note else f"转至{to_account['name']}"
             incoming_note = f"来自{from_account['name']}:{note}" if note else f"来自{from_account['name']}"
             TransactionDAO.create(source_id, "expense", "转账", amount, outgoing_note, today, conn=conn)

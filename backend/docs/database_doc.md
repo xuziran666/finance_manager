@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS logs (
 | 主机    | `localhost`       | 可通过环境变量 `DB_HOST` 配置  |
 | 端口    | `3306`            | 可通过环境变量 `DB_PORT` 配置  |
 | 用户名   | `root`            | 可通过环境变量 `DB_USER` 配置  |
-| 密码    | `123456`          | 可通过环境变量 `DB_PASS` 配置  |
+| 密码    | `123456`          | 可通过环境变量 `DB_PASSWORD` 配置  |
 | 数据库名  | `finance_manager` | 可通过环境变量 `DB_NAME` 配置  |
 | 最小连接池 | `2`               | 可通过环境变量 `POOL_MIN` 配置 |
 | 最大连接池 | `10`              | 可通过环境变量 `POOL_MAX` 配置 |

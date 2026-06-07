@@ -32,7 +32,11 @@
         <span class="fw-bold">最近交易</span>
       </template>
       <el-table :data="recent" stripe style="width: 100%" empty-text="暂无">
-        <el-table-column prop="date" label="日期" width="120" />
+        <el-table-column label="日期" width="175">
+          <template #default="{ row }">
+            {{ row.date?.replace('T', ' ') || row.date }}
+          </template>
+        </el-table-column>
         <el-table-column label="类型" width="80">
           <template #default="{ row }">
             <el-tag :type="row.type === 'income' ? 'success' : 'danger'" size="small" effect="plain">

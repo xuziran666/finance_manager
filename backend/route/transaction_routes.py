@@ -1,72 +1,75 @@
-"""交易记录路由：定义收支记录的查询、添加、转账和 CSV 导出接口"""
+from fastapi import APIRouter, Query
+from fastapi.responses import Response
+from typing import Optional
 import csv
 import io
-from flask import request
+from dto import TransactionCreate, TransferCreate
+from vo import ApiResponse
 from service import TransactionService
-from route.result import Result
+
+router = APIRouter(tags=["交易记录"])
 
 
-def init_transaction_routes(api):
-    """注册交易记录相关路由到指定的 Blueprint 对象"""
+@router.post("/transactions", summary="添加交易")
+def add_transaction(data: TransactionCreate):
+    ok, result = TransactionService.add(
+        data.account_id, data.type, data.category,
+        data.amount, data.note, data.date, data.subcategory,
+    )
+    return ApiResponse(data=result) if ok else ApiResponse(code=400, msg=result)
 
-    @api.route("/transactions", methods=["POST"])
-    def add_transaction():
-        """POST /api/transactions — 添加一条交易记录（自动更新账户余额）"""
-        data = request.json
-        ok, result = TransactionService.add(
-            data.get("account_id"), data.get("type"), data.get("category"),
-            data.get("amount"), data.get("note", ""), data.get("date", ""),
-            data.get("subcategory", "")
-        )
-        return Result.success(result) if ok else Result.fail(result)
 
-    @api.route("/transactions/transfer", methods=["POST"])
-    def transfer_money():
-        """POST /api/transactions/transfer — 账户间转账（生成两条对应记录）"""
-        data = request.json
-        ok, msg = TransactionService.transfer(
-            data.get("from_account"), data.get("to_account"),
-            data.get("amount"), data.get("note", "")
-        )
-        return Result.success(msg=msg) if ok else Result.fail(msg)
+@router.post("/transactions/transfer", summary="账户转账")
+def transfer_money(data: TransferCreate):
+    ok, msg = TransactionService.transfer(
+        data.from_account, data.to_account, data.amount, data.note,
+    )
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
 
-    @api.route("/transactions", methods=["GET"])
-    def get_transactions():
-        """GET /api/transactions — 分页查询交易记录，支持按账户/日期/分类筛选"""
-        return Result.success(TransactionService.get_all(
-            request.args.get("account_id", type=int),
-            request.args.get("start_date"),
-            request.args.get("end_date"),
-            request.args.get("category"),
-            request.args.get("page", 1, type=int),
-            request.args.get("page_size", 20, type=int)
-        ))
 
-    @api.route("/transactions/export", methods=["GET"])
-    def export_csv():
-        """GET /api/transactions/export — 导出筛选后的交易记录为 CSV 文件"""
-        data = TransactionService.get_all(
-            request.args.get("account_id", type=int),
-            request.args.get("start_date"),
-            request.args.get("end_date"),
-            page_size=99999
-        )
-        transactions = data.get("transactions", [])
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["日期", "类型", "分类", "二级分类", "金额", "账户", "备注"])
-        for txn in transactions:
-            writer.writerow([
-                txn.get("date", ""),
-                "收入" if txn["type"] == "income" else "支出",
-                txn.get("category", ""),
-                txn.get("subcategory", ""),
-                txn.get("amount", ""),
-                txn.get("account_name", ""),
-                txn.get("note", "")
-            ])
-        # 返回 CSV 格式的响应，设置 Content-Type 和文件下载头
-        return output.getvalue(), 200, {
-            "Content-Type": "text/csv;charset=utf-8",
-            "Content-Disposition": "attachment;filename=export.csv"
-        }
+@router.get("/transactions", summary="查询交易记录")
+def get_transactions(
+    account_id: Optional[int] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(20),
+):
+    return ApiResponse(data=TransactionService.get_all(
+        account_id, start_date, end_date, category, page, page_size,
+    ))
+
+
+@router.delete("/transactions/{id}", summary="删除交易")
+def delete_transaction(id: int):
+    ok, msg = TransactionService.delete(id)
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
+
+
+@router.get("/transactions/export", summary="导出交易 CSV")
+def export_csv(
+    account_id: Optional[int] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+):
+    data = TransactionService.get_all(account_id, start_date, end_date, page_size=99999)
+    transactions = data.get("transactions", [])
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["日期", "类型", "分类", "二级分类", "金额", "账户", "备注"])
+    for txn in transactions:
+        writer.writerow([
+            txn.get("date", ""),
+            "收入" if txn["type"] == "income" else "支出",
+            txn.get("category", ""),
+            txn.get("subcategory", ""),
+            txn.get("amount", ""),
+            txn.get("account_name", ""),
+            txn.get("note", ""),
+        ])
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv;charset=utf-8",
+        headers={"Content-Disposition": "attachment;filename=export.csv"},
+    )

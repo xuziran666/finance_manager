@@ -58,9 +58,12 @@ class TransactionDAO:
         创建新交易记录，并自动更新对应账户的余额
         收入 → 余额增加；支出 → 余额减少
         """
+        now_dt = datetime.now()
+        now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
         if not date:
-            date = datetime.now().strftime("%Y-%m-%d")
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            date = now_str
+        elif len(date) <= 10:
+            date = f"{date} {now_dt.strftime('%H:%M:%S')}"
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -70,7 +73,7 @@ class TransactionDAO:
             c.execute(
                 "INSERT INTO transactions (account_id,type,category,subcategory,amount,note,date,created_at) "
                 "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (account_id, type_, category, subcategory, amount, note, date, now)
+                (account_id, type_, category, subcategory, amount, note, date, now_str)
             )
             transaction_id = c.lastrowid
             c.execute("SELECT balance FROM accounts WHERE id=%s", (account_id,))
@@ -82,6 +85,29 @@ class TransactionDAO:
             if own_conn:
                 conn.commit()
             return TransactionDAO.get_by_id(transaction_id, conn=conn)
+        finally:
+            if own_conn:
+                conn.close()
+
+    @staticmethod
+    def delete(transaction_id, conn=None):
+        own_conn = False
+        if conn is None:
+            conn = get_connection()
+            own_conn = True
+        try:
+            c = conn.cursor()
+            txn = TransactionDAO.get_by_id(transaction_id, conn=conn)
+            if not txn:
+                return False
+            if txn["type"] == "income":
+                c.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", (txn["amount"], txn["account_id"]))
+            elif txn["type"] == "expense":
+                c.execute("UPDATE accounts SET balance = balance + %s WHERE id = %s", (txn["amount"], txn["account_id"]))
+            c.execute("DELETE FROM transactions WHERE id = %s", (transaction_id,))
+            if own_conn:
+                conn.commit()
+            return True
         finally:
             if own_conn:
                 conn.close()

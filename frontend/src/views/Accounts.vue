@@ -52,7 +52,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="初始余额" v-if="!af.id">
-          <el-input-number v-model="af.balance" :precision="2" style="width: 100%" />
+          <el-input-number v-model="af.balance" :precision="2" :min="0" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>

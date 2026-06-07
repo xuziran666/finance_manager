@@ -1,43 +1,39 @@
-"""预算管理路由：定义预算的查询、设置、汇总预警和删除接口"""
 from datetime import datetime
-from flask import request
+from fastapi import APIRouter, Query
+from typing import Optional
+from dto import BudgetSet, BudgetDelete
+from vo import ApiResponse
 from service import BudgetService
-from route.result import Result
+
+router = APIRouter(tags=["预算管理"])
 
 
-def init_budget_routes(api):
-    """注册预算相关路由到指定的 Blueprint 对象"""
+@router.get("/budgets/summary", summary="预算汇总")
+def get_budget_summary(
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+):
+    now = datetime.now()
+    y = year if year is not None else now.year
+    m = month if month is not None else now.month
+    return ApiResponse(data=BudgetService.get_summary(y, m))
 
-    @api.route("/budgets/summary", methods=["GET"])
-    def get_budget_summary():
-        """GET /api/budgets/summary — 预算汇总，含实际花费对比和超支预警"""
-        now = datetime.now()
-        return Result.success(BudgetService.get_summary(
-            request.args.get("year", type=int, default=now.year),
-            request.args.get("month", type=int, default=now.month)
-        ))
 
-    @api.route("/budgets", methods=["DELETE"])
-    def delete_budget():
-        """DELETE /api/budgets — 删除指定预算"""
-        data = request.json
-        BudgetService.delete(data.get("year"), data.get("month"), data.get("category", ""))
-        return Result.success(msg="删除成功")
+@router.delete("/budgets", summary="删除预算")
+def delete_budget(data: BudgetDelete):
+    BudgetService.delete(data.year, data.month, data.category)
+    return ApiResponse(msg="删除成功")
 
-    @api.route("/budgets", methods=["POST"])
-    def set_budget():
-        """POST /api/budgets — 设置预算（若已存在则覆盖更新金额）"""
-        data = request.json
-        ok, msg = BudgetService.set(
-            data.get("year"), data.get("month"),
-            data.get("category"), data.get("amount")
-        )
-        return Result.success(msg=msg) if ok else Result.fail(msg)
 
-    @api.route("/budgets", methods=["GET"])
-    def get_budgets():
-        """GET /api/budgets — 获取预算列表，可按年月筛选"""
-        return Result.success(BudgetService.get_all(
-            request.args.get("year", type=int),
-            request.args.get("month", type=int)
-        ))
+@router.post("/budgets", summary="设置预算")
+def set_budget(data: BudgetSet):
+    ok, msg = BudgetService.set(data.year, data.month, data.category, data.amount)
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
+
+
+@router.get("/budgets", summary="查询预算")
+def get_budgets(
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+):
+    return ApiResponse(data=BudgetService.get_all(year, month))

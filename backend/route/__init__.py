@@ -1,17 +1,16 @@
-"""路由控制层"""
-from flask import Blueprint
-from route.account_routes import init_account_routes
-from route.transaction_routes import init_transaction_routes
-from route.category_routes import init_category_routes
-from route.budget_routes import init_budget_routes
-from route.statistics_routes import init_statistics_routes
-from route.log_routes import init_log_routes
+from fastapi import APIRouter
 
-api = Blueprint("api", __name__, url_prefix="/api")
+from route.account_routes import router as account_router
+from route.transaction_routes import router as transaction_router
+from route.category_routes import router as category_router
+from route.budget_routes import router as budget_router
+from route.statistics_routes import router as statistics_router
+from route.log_routes import router as log_router
 
-init_account_routes(api)
-init_transaction_routes(api)
-init_category_routes(api)
-init_budget_routes(api)
-init_statistics_routes(api)
-init_log_routes(api)
+api = APIRouter(prefix="/api")
+api.include_router(account_router)
+api.include_router(transaction_router)
+api.include_router(category_router)
+api.include_router(budget_router)
+api.include_router(statistics_router)
+api.include_router(log_router)

@@ -1,37 +1,32 @@
-"""分类管理路由：定义收支分类的增删改查 API 接口"""
-from flask import request
+from fastapi import APIRouter
+from dto import CategoryCreate, CategoryDelete, CategoryUpdate
+from vo import ApiResponse
 from service import CategoryService
-from route.result import Result
+
+router = APIRouter(tags=["分类管理"])
 
 
-def init_category_routes(api):
-    """注册分类相关路由到指定的 Blueprint 对象"""
+@router.post("/categories", summary="添加分类")
+def add_category(data: CategoryCreate):
+    ok, msg = CategoryService.add(data.type, data.main, data.sub)
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
 
-    @api.route("/categories", methods=["POST"])
-    def add_category():
-        """POST /api/categories — 添加新分类（type, main, sub）"""
-        data = request.json
-        ok, msg = CategoryService.add(data.get("type"), data.get("main"), data.get("sub", ""))
-        return Result.success(msg=msg) if ok else Result.fail(msg)
 
-    @api.route("/categories", methods=["DELETE"])
-    def delete_category():
-        """DELETE /api/categories — 删除指定分类"""
-        data = request.json
-        ok, msg = CategoryService.delete(data.get("type"), data.get("main", ""), data.get("sub", ""))
-        return Result.success(msg=msg) if ok else Result.fail(msg)
+@router.delete("/categories", summary="删除分类")
+def delete_category(data: CategoryDelete):
+    ok, msg = CategoryService.delete(data.type, data.main, data.sub)
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
 
-    @api.route("/categories", methods=["PUT"])
-    def update_category():
-        """PUT /api/categories — 修改分类（支持修改类型/主分类/子分类）"""
-        data = request.json
-        ok, msg = CategoryService.update(
-            data.get("old_type"), data.get("old_main", ""), data.get("old_sub", ""),
-            data.get("new_type"), data.get("new_main", ""), data.get("new_sub", "")
-        )
-        return Result.success(msg=msg) if ok else Result.fail(msg)
 
-    @api.route("/categories", methods=["GET"])
-    def get_categories():
-        """GET /api/categories — 获取分类树结构和扁平列表"""
-        return Result.success(CategoryService.get_all())
+@router.put("/categories", summary="修改分类")
+def update_category(data: CategoryUpdate):
+    ok, msg = CategoryService.update(
+        data.old_type, data.old_main, data.old_sub,
+        data.new_type, data.new_main, data.new_sub,
+    )
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
+
+
+@router.get("/categories", summary="获取分类列表")
+def get_categories():
+    return ApiResponse(data=CategoryService.get_all())

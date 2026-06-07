@@ -1,33 +1,29 @@
-"""账户管理路由：定义账户的增删改查 API 接口"""
-from flask import request
+from fastapi import APIRouter
+from dto import AccountCreate, AccountUpdate
+from vo import ApiResponse
 from service import AccountService
-from route.result import Result
+
+router = APIRouter(tags=["账户管理"])
 
 
-def init_account_routes(api):
-    """注册账户相关路由到指定的 Blueprint 对象"""
+@router.post("/accounts", summary="添加账户")
+def add_account(data: AccountCreate):
+    ok, result = AccountService.add(data.name, data.type, data.balance)
+    return ApiResponse(data=result) if ok else ApiResponse(code=400, msg=result)
 
-    @api.route("/accounts", methods=["POST"])
-    def add_account():
-        """POST /api/accounts — 添加新账户（name, type, balance）"""
-        data = request.json
-        ok, result = AccountService.add(data.get("name"), data.get("type"), data.get("balance", 0))
-        return Result.success(result) if ok else Result.fail(result)
 
-    @api.route("/accounts/<int:aid>", methods=["DELETE"])
-    def delete_account(aid):
-        """DELETE /api/accounts/{id} — 删除指定账户及其关联交易"""
-        ok, msg = AccountService.delete(aid)
-        return Result.success(msg=msg) if ok else Result.fail(msg)
+@router.delete("/accounts/{aid}", summary="删除账户")
+def delete_account(aid: int):
+    ok, msg = AccountService.delete(aid)
+    return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
 
-    @api.route("/accounts/<int:aid>", methods=["PUT"])
-    def update_account(aid):
-        """PUT /api/accounts/{id} — 更新指定账户的名称和类型"""
-        data = request.json
-        ok, result = AccountService.update(aid, data.get("name"), data.get("type"))
-        return Result.success(result) if ok else Result.fail(result)
 
-    @api.route("/accounts", methods=["GET"])
-    def get_accounts():
-        """GET /api/accounts — 获取所有账户列表"""
-        return Result.success(AccountService.get_all())
+@router.put("/accounts/{aid}", summary="更新账户")
+def update_account(aid: int, data: AccountUpdate):
+    ok, result = AccountService.update(aid, data.name, data.type)
+    return ApiResponse(data=result) if ok else ApiResponse(code=400, msg=result)
+
+
+@router.get("/accounts", summary="获取账户列表")
+def get_accounts():
+    return ApiResponse(data=AccountService.get_all())

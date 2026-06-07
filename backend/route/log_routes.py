@@ -1,13 +1,10 @@
-"""操作日志路由：提供系统操作日志的查询接口"""
-from flask import request
+from fastapi import APIRouter, Query
+from vo import ApiResponse
 from service import LogService
-from route.result import Result
+
+router = APIRouter(tags=["操作日志"])
 
 
-def init_log_routes(api):
-    """注册日志相关路由到指定的 Blueprint 对象"""
-
-    @api.route("/logs", methods=["GET"])
-    def get_logs():
-        """GET /api/logs — 获取操作日志列表，支持限制返回条数"""
-        return Result.success(LogService.get_all(request.args.get("limit", 100, type=int)))
+@router.get("/logs", summary="获取操作日志")
+def get_logs(limit: int = Query(100)):
+    return ApiResponse(data=LogService.get_all(limit))

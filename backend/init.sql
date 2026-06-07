@@ -2,6 +2,8 @@
 -- 财务管理系统 - 数据库初始化脚本
 -- 数据库名：finance_manager
 -- ============================================
+-- 如已有数据库，请执行迁移：
+-- ALTER TABLE transactions MODIFY date DATETIME NOT NULL;
 
 -- 1. 创建数据库
 CREATE DATABASE IF NOT EXISTS finance_manager CHARACTER SET utf8mb4;
@@ -31,7 +33,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     subcategory VARCHAR(50) DEFAULT '',
     amount DECIMAL(12,2) NOT NULL,
     note TEXT,
-    date DATE NOT NULL,
+    date DATETIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

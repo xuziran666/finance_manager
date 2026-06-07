@@ -3,7 +3,7 @@ from contextlib import contextmanager
 import pymysql
 import pymysql.cursors
 from dbutils.pooled_db import PooledDB
-from config import DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, POOL_MIN, POOL_MAX
+from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, POOL_MIN, POOL_MAX
 
 # 连接池单例对象（全局唯一）
 _pool = None
@@ -18,18 +18,19 @@ def _get_pool():
     global _pool
     if _pool is None:
         _pool = PooledDB(
-            creator=pymysql,                    # 使用 PyMySQL 作为数据库驱动
-            mincached=POOL_MIN,                 # 连接池启动时预先创建的连接数
-            maxcached=POOL_MAX,                 # 连接池中最多保留的连接数
-            maxconnections=POOL_MAX,             # 允许的最大并发连接数
-            blocking=True,                       # 无可用连接时阻塞等待
+            creator=pymysql,
+            mincached=POOL_MIN,
+            maxcached=POOL_MAX,
+            maxconnections=POOL_MAX,
+            blocking=True,
             host=DB_HOST,
             port=DB_PORT,
             user=DB_USER,
-            password=DB_PASS,
+            password=DB_PASSWORD,
             database=DB_NAME,
-            charset='utf8mb4',                   # 使用 UTF-8 编码支持中文
-            cursorclass=pymysql.cursors.DictCursor,  # 返回字典格式的查询结果
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            init_command="SET time_zone = '+08:00'",
         )
     return _pool
 

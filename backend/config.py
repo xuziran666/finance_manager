@@ -1,26 +1,41 @@
-"""系统配置文件：从 .env 文件或环境变量读取所有配置项"""
-import os
-from dotenv import load_dotenv
+"""系统配置：基于 pydantic-settings 统一管理配置"""
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# 加载 .env 文件中的环境变量
-load_dotenv()
 
-# 项目根目录路径
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+class _Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-# ========== 数据库配置（优先从环境变量读取，失败则使用默认值） ==========
-DB_HOST = os.getenv('DB_HOST', 'localhost')           # 数据库主机地址
-DB_PORT = int(os.getenv('DB_PORT', 3306))              # 数据库端口号
-DB_USER = os.getenv('DB_USER', 'root')                 # 数据库用户名
-DB_PASS = os.getenv('DB_PASS', '123456')             # 数据库密码
-DB_NAME = os.getenv('DB_NAME', 'finance_manager')      # 数据库名称
+    # 应用配置
+    app_secret_key: str = "finance-manager-secret-key-2026"
+    app_debug: bool = True
+    app_host: str = "0.0.0.0"
+    app_port: int = 5000
 
-# ========== Flask 应用配置 ==========
-SECRET_KEY = os.getenv('SECRET_KEY', 'finance-manager-secret-key-2026')  # 密钥
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')      # 调试模式
-HOST = os.getenv('HOST', '0.0.0.0')   # 监听所有网络接口
-PORT = int(os.getenv('PORT', 5000))   # 服务端口号
+    # 数据库配置
+    db_host: str = "localhost"
+    db_port: int = 3306
+    db_user: str = "root"
+    db_password: str = "your_password"
+    db_name: str = "finance_manager"
+    db_pool_min: int = 2
+    db_pool_max: int = 10
 
-# ========== 数据库连接池配置 ==========
-POOL_MIN = int(os.getenv('POOL_MIN', 2))   # 最小空闲连接数
-POOL_MAX = int(os.getenv('POOL_MAX', 10))  # 最大连接数
+
+_settings = _Settings()
+
+SECRET_KEY = _settings.app_secret_key
+DEBUG = _settings.app_debug
+HOST = _settings.app_host
+PORT = _settings.app_port
+
+DB_HOST = _settings.db_host
+DB_PORT = _settings.db_port
+DB_USER = _settings.db_user
+DB_PASSWORD = _settings.db_password
+DB_NAME = _settings.db_name
+POOL_MIN = _settings.db_pool_min
+POOL_MAX = _settings.db_pool_max

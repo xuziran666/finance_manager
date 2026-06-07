@@ -1,18 +1,16 @@
-"""统计分析路由：提供收支数据的聚合统计接口"""
-from flask import request
+from fastapi import APIRouter, Query
+from typing import Optional
+from vo import ApiResponse
 from service import StatisticsService
-from route.result import Result
+
+router = APIRouter(tags=["统计分析"])
 
 
-def init_statistics_routes(api):
-    """注册统计相关路由到指定的 Blueprint 对象"""
-
-    @api.route("/statistics", methods=["GET"])
-    def get_statistics():
-        """GET /api/statistics — 获取统计数据（总收入/支出/趋势/分类占比）"""
-        return Result.success(StatisticsService.get(
-            request.args.get("account_id", type=int),
-            request.args.get("start_date"),
-            request.args.get("end_date"),
-            request.args.get("group_by", "month")
-        ))
+@router.get("/statistics", summary="获取统计数据")
+def get_statistics(
+    account_id: Optional[int] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    group_by: str = Query("month"),
+):
+    return ApiResponse(data=StatisticsService.get(account_id, start_date, end_date, group_by))
