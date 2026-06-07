@@ -81,11 +81,13 @@ class CategoryDAO:
         返回格式: {"income": {"工资": ["基本工资", ...]}, "expense": {...}}
         """
         cats = CategoryDAO.get_all(conn=conn)
-        tree = {"income": {}, "expense": {}}
+        tree = {}
         for cat in cats:
             cat_type = cat["type"]
             cat_main = cat["main"]
             cat_sub = cat["sub"]
+            if cat_type not in tree:
+                tree[cat_type] = {}
             if cat_main not in tree[cat_type]:
                 tree[cat_type][cat_main] = []
             if cat_sub:
