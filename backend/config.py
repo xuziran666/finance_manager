@@ -15,6 +15,10 @@ class _Settings(BaseSettings):
     app_host: str = "0.0.0.0"
     app_port: int = 5000
 
+    # JWT 配置
+    app_jwt_algorithm: str = "HS256"
+    app_jwt_expire_minutes: int = 1440
+
     # 数据库配置
     db_host: str = "localhost"
     db_port: int = 3306
@@ -39,3 +43,6 @@ DB_PASSWORD = _settings.db_password
 DB_NAME = _settings.db_name
 POOL_MIN = _settings.db_pool_min
 POOL_MAX = _settings.db_pool_max
+
+JWT_ALGORITHM = _settings.app_jwt_algorithm
+JWT_EXPIRE_MINUTES = _settings.app_jwt_expire_minutes

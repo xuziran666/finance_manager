@@ -1,35 +1,35 @@
 from db import get_connection
 
 
-class LogDAO:
+class UserDAO:
 
     @staticmethod
-    def add(user_id, action, detail, conn=None):
+    def get_by_username(username, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute("INSERT INTO logs (user_id,action,detail) VALUES (%s,%s,%s)",
-                      (user_id, action, detail))
-            if own_conn:
-                conn.commit()
+            c.execute("SELECT * FROM users WHERE username=%s", (username,))
+            row = c.fetchone()
+            return dict(row) if row else None
         finally:
             if own_conn:
                 conn.close()
 
     @staticmethod
-    def get_all(user_id, limit=100, conn=None):
+    def create(username, password_hash, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute("SELECT * FROM logs WHERE user_id=%s ORDER BY time DESC LIMIT %s",
-                      (user_id, limit))
-            return [dict(r) for r in c.fetchall()]
+            c.execute("INSERT INTO users (username,password_hash) VALUES (%s,%s)", (username, password_hash))
+            if own_conn:
+                conn.commit()
+            return c.lastrowid
         finally:
             if own_conn:
                 conn.close()

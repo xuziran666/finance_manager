@@ -1,32 +1,14 @@
-"""统计业务层：提供收支数据的多维度聚合统计分析"""
 from collections import defaultdict
 from datetime import datetime, date, timedelta
 from dao import TransactionDAO
 
 
 class StatisticsService:
-    """统计服务类，提供各类财务数据统计分析"""
 
     @staticmethod
-    def get(account_id=None, start_date=None, end_date=None, group_by="month"):
-        """
-        获取统计数据
-        参数：
-            account_id — 账户 ID（可选）
-            start_date — 开始日期（可选）
-            end_date   — 结束日期（可选）
-            group_by   — 时间分组方式（year/month/day/week）
-        返回：
-            total_income / total_expense / balance — 汇总数据
-            trend — 按时间维度的趋势数据
-            expense_by_category / income_by_category — 分类汇总（降序）
-        """
-        result = TransactionDAO.get_all(account_id=account_id, page_size=99999)
+    def get(user_id, account_id=None, start_date=None, end_date=None, group_by="month"):
+        result = TransactionDAO.get_all(user_id, account_id=account_id, start_date=start_date, end_date=end_date, page_size=99999)
         transactions = result["transactions"]
-        if start_date:
-            transactions = [t for t in transactions if str(t.get("date", "")) >= start_date]
-        if end_date:
-            transactions = [t for t in transactions if str(t.get("date", "")) <= end_date]
         total_income = sum(float(t["amount"]) for t in transactions if t["type"] == "income")
         total_expense = sum(float(t["amount"]) for t in transactions if t["type"] == "expense")
         income_grouped = defaultdict(float)
@@ -75,10 +57,6 @@ class StatisticsService:
 
     @staticmethod
     def _get_group_key(date_str, group_by):
-        """
-        根据日期字符串和分组方式生成时间分组键
-        如：2026-05-21, month → "2026-05"
-        """
         if not date_str:
             return "未知"
         if isinstance(date_str, (datetime, date)):

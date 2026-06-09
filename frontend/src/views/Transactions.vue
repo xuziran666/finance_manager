@@ -64,11 +64,11 @@
           </template>
         </el-table-column>
       </el-table>
-      <div class="flex-center mt-3" v-if="tp > 1">
+      <div class="flex-center mt-3" v-if="totalRecords > 0">
         <el-pagination
           background
           layout="prev, pager, next"
-          :total="tp * 20"
+          :total="totalRecords"
           :page-size="20"
           :current-page="cp"
           @current-change="loadTxns"
@@ -153,14 +153,15 @@ import { getTransactions, createTransaction, transfer, deleteTransaction } from 
 import { useStore } from '../composables/useStore'
 
 const { accs, catTree, loadAccs, loadCats } = useStore()
-const txns = ref([])   // 交易记录列表
-const cp = ref(1)      // 当前页码
-const tp = ref(1)      // 总页数
+const txns = ref([])     // 交易记录列表
+const cp = ref(1)        // 当前页码
+const totalRecords = ref(0)  // 总记录数
 const f = reactive({ acc: '', sd: '', ed: '' })  // 筛选条件
 
 // 新增交易表单
 const defNow = () => new Date().toISOString().slice(0, 19).replace('T', ' ')
-const tf = reactive({ acc: '', type: 'expense', cat: '', subcat: '', amt: '', date: defNow() })
+const defTf = () => ({ acc: '', type: 'expense', cat: '', subcat: '', amt: null, date: defNow() })
+const tf = reactive(defTf())
 
 // 根据选择的类型动态获取主分类和子分类
 const mainCats = computed(() => Object.keys(catTree.value[tf.type] || {}))
@@ -203,7 +204,8 @@ const onSubcatChange = async (val) => {
 }
 
 // 转账表单
-const trf = reactive({ from: '', to: '', amt: '' })
+const defTrf = () => ({ from: '', to: '', amt: '' })
+const trf = reactive(defTrf())
 const txnDialogVisible = ref(false)
 const transferDialogVisible = ref(false)
 
@@ -218,24 +220,20 @@ const loadTxns = async (p) => {
   const r = await getTransactions(p2.toString())
   if (r && r.code === 200) {
     txns.value = r.data.transactions
-    tp.value = r.data.total_pages
+    totalRecords.value = r.data.total
   }
 }
 
 /** 打开添加交易对话框 */
 const openTxn = () => {
+  Object.assign(tf, defTf())
   tf.acc = accs.value[0]?.id || ''
-  tf.type = 'expense'
-  tf.cat = ''
-  tf.subcat = ''
-  tf.amt = ''
-  tf.date = defNow()
   txnDialogVisible.value = true
 }
 
 /** 保存新交易记录 */
 const saveTxn = async () => {
-  if (!tf.acc || !tf.cat || !tf.amt) {
+  if (!tf.acc || !tf.cat || tf.amt == null || tf.amt <= 0) {
     ElMessage.warning('请填写完整')
     return
   }
@@ -255,6 +253,7 @@ const saveTxn = async () => {
 
 /** 打开转账对话框 */
 const showTransfer = () => {
+  Object.assign(trf, defTrf())
   transferDialogVisible.value = true
 }
 

@@ -27,6 +27,18 @@
         </el-card>
       </el-col>
     </el-row>
+    <el-card shadow="never" class="mb-3">
+      <template #header>
+        <div class="d-flex align-items-center justify-content-between">
+          <span class="fw-bold">收支趋势</span>
+          <el-radio-group v-model="groupBy" size="small" @change="loadTrend">
+            <el-radio-button value="month">月度</el-radio-button>
+            <el-radio-button value="year">年度</el-radio-button>
+          </el-radio-group>
+        </div>
+      </template>
+      <div ref="trendRef" style="width:100%;height:320px"></div>
+    </el-card>
     <el-card shadow="never">
       <template #header>
         <span class="fw-bold">最近交易</span>
@@ -59,11 +71,8 @@
 </template>
 
 <script setup>
-/**
- * 财务总览页面
- * 展示总收入/支出/结余统计卡片，以及最近 10 条交易记录
- */
-import { ref, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import * as echarts from 'echarts'
 import { fmt } from '../api'
 import { getStatistics } from '../api/statistics'
 import { getTransactions } from '../api/transaction'
@@ -71,18 +80,57 @@ import { useStore } from '../composables/useStore'
 
 const { accs } = useStore()
 
-const s = ref({})      // 统计数据
-const recent = ref([]) // 最近交易列表
+const s = ref({})
+const recent = ref([])
+const groupBy = ref('month')
+const trendRef = ref(null)
+let trendChart = null
 
-/** 加载总览数据 */
-const loadDash = async () => {
-  const r = await getStatistics('group_by=month')
-  if (r && r.code === 200) s.value = r.data
-  const t = await getTransactions('page=1&page_size=10')
-  if (t && t.code === 200) recent.value = t.data.transactions.slice(0, 10)
+const renderTrend = () => {
+  if (!trendChart || !s.value.trend?.length) return
+  const periods = s.value.trend.map(t => t.period)
+  trendChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['收入', '支出', '结余'] },
+    grid: { left: 60, right: 20, bottom: 30, top: 10 },
+    xAxis: { type: 'category', data: periods, boundaryGap: false },
+    yAxis: { type: 'value', axisLabel: { formatter: v => '¥' + v.toLocaleString() } },
+    series: [
+      {
+        name: '收入', type: 'line', smooth: true, data: s.value.trend.map(t => t.income),
+        lineStyle: { color: '#67c23a' }, itemStyle: { color: '#67c23a' }, areaStyle: { color: 'rgba(103,194,58,0.1)' }
+      },
+      {
+        name: '支出', type: 'line', smooth: true, data: s.value.trend.map(t => t.expense),
+        lineStyle: { color: '#f56c6c' }, itemStyle: { color: '#f56c6c' }, areaStyle: { color: 'rgba(245,108,108,0.1)' }
+      },
+      {
+        name: '结余', type: 'line', smooth: true, data: s.value.trend.map(t => t.balance),
+        lineStyle: { color: '#409eff' }, itemStyle: { color: '#409eff' }, areaStyle: { color: 'rgba(64,158,255,0.1)' }
+      }
+    ]
+  })
 }
 
-onMounted(() => {
-  loadDash()
+const loadTrend = async () => {
+  const r = await getStatistics(`group_by=${groupBy.value}`)
+  if (r && r.code === 200) {
+    s.value = r.data
+    await nextTick()
+    renderTrend()
+  }
+}
+
+onMounted(async () => {
+  trendChart = echarts.init(trendRef.value)
+  await loadTrend()
+  const t = await getTransactions('page=1&page_size=10')
+  if (t && t.code === 200) recent.value = t.data.transactions.slice(0, 10)
+  window.addEventListener('resize', trendChart.resize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', trendChart?.resize)
+  trendChart?.dispose()
 })
 </script>

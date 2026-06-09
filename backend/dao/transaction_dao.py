@@ -1,25 +1,19 @@
-"""交易记录数据访问层：封装 transactions 表的 CRUD 与分页查询"""
 from datetime import datetime
 from db import get_connection
 
 
 class TransactionDAO:
-    """交易记录数据访问对象，提供交易表的增删改查与分页方法"""
 
     @staticmethod
-    def get_all(account_id=None, start_date=None, end_date=None, category=None, page=1, page_size=20, conn=None):
-        """
-        分页查询交易记录，支持按账户、日期范围、分类筛选
-        返回包含交易列表、总数、页码、总页数的字典
-        """
+    def get_all(user_id, account_id=None, start_date=None, end_date=None, category=None, page=1, page_size=20, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            where_conditions = ["1=1"]
-            params = []
+            where_conditions = ["t.user_id=%s"]
+            params = [user_id]
             if account_id:
                 where_conditions.append("t.account_id=%s")
                 params.append(account_id)
@@ -36,7 +30,6 @@ class TransactionDAO:
             c.execute(f"SELECT COUNT(*) AS count FROM transactions t WHERE {where_clause}", params)
             total = c.fetchone()['count']
             offset = (page - 1) * page_size
-            # 查询当前页数据，同时关联账户表获取账户名称和类型
             c.execute(
                 f"SELECT t.*,a.name as account_name,a.type as account_type "
                 f"FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id "
@@ -53,11 +46,7 @@ class TransactionDAO:
                 conn.close()
 
     @staticmethod
-    def create(account_id, type_, category, amount, note="", date=None, subcategory="", conn=None):
-        """
-        创建新交易记录，并自动更新对应账户的余额
-        收入 → 余额增加；支出 → 余额减少
-        """
+    def create(user_id, account_id, type_, category, amount, note="", date=None, subcategory="", conn=None):
         now_dt = datetime.now()
         now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
         if not date:
@@ -71,9 +60,9 @@ class TransactionDAO:
         try:
             c = conn.cursor()
             c.execute(
-                "INSERT INTO transactions (account_id,type,category,subcategory,amount,note,date,created_at) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (account_id, type_, category, subcategory, amount, note, date, now_str)
+                "INSERT INTO transactions (user_id,account_id,type,category,subcategory,amount,note,date,created_at) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (user_id, account_id, type_, category, subcategory, amount, note, date, now_str)
             )
             transaction_id = c.lastrowid
             c.execute("SELECT balance FROM accounts WHERE id=%s", (account_id,))
@@ -90,7 +79,7 @@ class TransactionDAO:
                 conn.close()
 
     @staticmethod
-    def delete(transaction_id, conn=None):
+    def delete(transaction_id, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -99,6 +88,11 @@ class TransactionDAO:
             c = conn.cursor()
             txn = TransactionDAO.get_by_id(transaction_id, conn=conn)
             if not txn:
+                return False
+            if user_id is None:
+                from context import get_current_user_id
+                user_id = get_current_user_id()
+            if user_id is not None and txn["user_id"] != user_id:
                 return False
             if txn["type"] == "income":
                 c.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", (txn["amount"], txn["account_id"]))
@@ -113,19 +107,28 @@ class TransactionDAO:
                 conn.close()
 
     @staticmethod
-    def get_by_id(transaction_id, conn=None):
-        """根据主键 ID 查询单条交易记录（含账户信息）"""
+    def get_by_id(transaction_id, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute(
-                "SELECT t.*,a.name as account_name,a.type as account_type "
-                "FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id WHERE t.id=%s",
-                (transaction_id,)
-            )
+            if user_id is None:
+                from context import get_current_user_id
+                user_id = get_current_user_id()
+            if user_id:
+                c.execute(
+                    "SELECT t.*,a.name as account_name,a.type as account_type "
+                    "FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id WHERE t.id=%s AND t.user_id=%s",
+                    (transaction_id, user_id)
+                )
+            else:
+                c.execute(
+                    "SELECT t.*,a.name as account_name,a.type as account_type "
+                    "FROM transactions t LEFT JOIN accounts a ON t.account_id=a.id WHERE t.id=%s",
+                    (transaction_id,)
+                )
             row = c.fetchone()
             return dict(row) if row else None
         finally:

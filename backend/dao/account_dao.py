@@ -1,38 +1,37 @@
-"""账户数据访问层：封装 accounts 表的 CRUD 操作"""
 from db import get_connection
+from context import get_current_user_id
 
 
 class AccountDAO:
-    """账户数据访问对象，提供账户表的增删改查方法"""
 
     @staticmethod
-    def get_all(conn=None):
-        """
-        获取所有账户列表，按 id 升序排列
-        conn — 可选的外部数据库连接（用于事务共享）
-        """
+    def get_all(user_id, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute("SELECT * FROM accounts ORDER BY id")
+            c.execute("SELECT * FROM accounts WHERE user_id=%s ORDER BY id", (user_id,))
             return [dict(r) for r in c.fetchall()]
         finally:
             if own_conn:
                 conn.close()
 
     @staticmethod
-    def get_by_id(aid, conn=None):
-        """根据主键 ID 查询单个账户"""
+    def get_by_id(aid, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute("SELECT * FROM accounts WHERE id=%s", (aid,))
+            if user_id is None:
+                user_id = get_current_user_id()
+            if user_id:
+                c.execute("SELECT * FROM accounts WHERE id=%s AND user_id=%s", (aid, user_id))
+            else:
+                c.execute("SELECT * FROM accounts WHERE id=%s", (aid,))
             row = c.fetchone()
             return dict(row) if row else None
         finally:
@@ -40,15 +39,15 @@ class AccountDAO:
                 conn.close()
 
     @staticmethod
-    def create(name, type_, balance=0.0, conn=None):
-        """创建新账户，返回完整的账户记录"""
+    def create(user_id, name, type_, balance=0.0, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            c.execute("INSERT INTO accounts (name,type,balance) VALUES (%s,%s,%s)", (name, type_, balance))
+            c.execute("INSERT INTO accounts (user_id,name,type,balance) VALUES (%s,%s,%s,%s)",
+                      (user_id, name, type_, balance))
             if own_conn:
                 conn.commit()
             aid = c.lastrowid
@@ -58,17 +57,23 @@ class AccountDAO:
                 conn.close()
 
     @staticmethod
-    def update(aid, name=None, type_=None, conn=None):
-        """更新账户的名称和/或类型，返回更新后的账户记录"""
+    def update(aid, user_id=None, name=None, type_=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            if name:
+            if user_id is None:
+                user_id = get_current_user_id()
+            if user_id:
+                c.execute("SELECT user_id FROM accounts WHERE id=%s", (aid,))
+                row = c.fetchone()
+                if not row or row["user_id"] != user_id:
+                    return None
+            if name is not None:
                 c.execute("UPDATE accounts SET name=%s WHERE id=%s", (name, aid))
-            if type_:
+            if type_ is not None:
                 c.execute("UPDATE accounts SET type=%s WHERE id=%s", (type_, aid))
             if own_conn:
                 conn.commit()
@@ -79,7 +84,6 @@ class AccountDAO:
 
     @staticmethod
     def update_balance(aid, bal, conn=None):
-        """直接更新账户余额（用于余额修正场景）"""
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -95,14 +99,20 @@ class AccountDAO:
                 conn.close()
 
     @staticmethod
-    def delete(aid, conn=None):
-        """删除指定账户及其关联的所有交易记录（级联删除）"""
+    def delete(aid, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
+            if user_id is None:
+                user_id = get_current_user_id()
+            if user_id:
+                c.execute("SELECT user_id FROM accounts WHERE id=%s", (aid,))
+                row = c.fetchone()
+                if not row or row["user_id"] != user_id:
+                    return False
             c.execute("DELETE FROM transactions WHERE account_id=%s", (aid,))
             c.execute("DELETE FROM accounts WHERE id=%s", (aid,))
             if own_conn:

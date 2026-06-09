@@ -1,19 +1,24 @@
-"""
-个人收支财务管理系统 — 账户模块单元测试
-运行方式：python -m pytest tests/test_account.py -v
-"""
-import sys
-import os
+import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
+from tests import ensure_test_user, cleanup_test_user
 from dao import AccountDAO
 from service import AccountService
 from db import connection_scope
 
+_uid = None
+
+def setUpModule():
+    global _uid
+    _uid = ensure_test_user("test_account_user")
+
+
+def tearDownModule():
+    cleanup_test_user("test_account_user")
+
 
 class TestAccountDAO(unittest.TestCase):
-    """账户数据访问层单元测试"""
 
     def setUp(self):
         with connection_scope() as conn:
@@ -22,7 +27,7 @@ class TestAccountDAO(unittest.TestCase):
             c.execute("DELETE FROM accounts WHERE name LIKE '测试%'")
 
     def test_create_account(self):
-        a = AccountDAO.create("测试账户", "bank", 1000.00)
+        a = AccountDAO.create(_uid, "测试账户", "bank", 1000.00)
         self.assertIsNotNone(a)
         self.assertEqual(a["name"], "测试账户")
         self.assertEqual(a["type"], "bank")
@@ -31,7 +36,7 @@ class TestAccountDAO(unittest.TestCase):
 
     def test_get_all_accounts(self):
         self.test_create_account()
-        accs = AccountDAO.get_all()
+        accs = AccountDAO.get_all(_uid)
         self.assertGreaterEqual(len(accs), 1)
 
     def test_get_by_id(self):
@@ -47,7 +52,6 @@ class TestAccountDAO(unittest.TestCase):
 
 
 class TestAccountService(unittest.TestCase):
-    """账户业务层单元测试"""
 
     def setUp(self):
         with connection_scope() as conn:
@@ -56,17 +60,17 @@ class TestAccountService(unittest.TestCase):
             c.execute("DELETE FROM accounts WHERE name LIKE '测试%'")
 
     def test_add_valid(self):
-        succ, r = AccountService.add("测试服务账户", "alipay", 100.00)
+        succ, r = AccountService.add(_uid, "测试服务账户", "alipay", 100.00)
         self.assertTrue(succ)
         self.assertEqual(r["name"], "测试服务账户")
 
     def test_add_empty_name(self):
-        succ, msg = AccountService.add("", "bank", 0)
+        succ, msg = AccountService.add(_uid, "", "bank", 0)
         self.assertFalse(succ)
         self.assertEqual(msg, "名称不能为空")
 
     def test_add_negative_balance(self):
-        succ, msg = AccountService.add("测试", "bank", -100)
+        succ, msg = AccountService.add(_uid, "测试", "bank", -100)
         self.assertFalse(succ)
         self.assertEqual(msg, "余额不能为负")
 
