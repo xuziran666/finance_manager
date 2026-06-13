@@ -3,7 +3,7 @@ from service import UserService
 from context import set_current_user, clear_current_user
 
 
-def get_current_user(authorization: str = Header(...)):
+async def get_current_user(authorization: str = Header(...)):
     token = authorization.removeprefix("Bearer ")
     payload = UserService.verify_token(token)
     if not payload:
