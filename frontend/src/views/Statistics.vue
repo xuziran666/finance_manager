@@ -3,20 +3,26 @@
     <h4 class="page-title">统计分析</h4>
     <el-card shadow="never" class="mb-3">
       <el-row :gutter="8">
-        <el-col :span="6">
+        <el-col :span="5">
           <el-select v-model="sf.acc" placeholder="全部账户" clearable style="width: 100%">
             <el-option label="全部" value="" />
             <el-option v-for="a in accs" :key="a.id" :label="a.name" :value="a.id" />
           </el-select>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
           <el-date-picker v-model="sf.sd" type="date" placeholder="开始日期" style="width: 100%" value-format="YYYY-MM-DD" />
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
           <el-date-picker v-model="sf.ed" type="date" placeholder="结束日期" style="width: 100%" value-format="YYYY-MM-DD" />
         </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="loadStats">分析</el-button>
+        <el-col :span="4" style="padding-top: 1px;">
+          <el-radio-group v-model="groupBy" size="small">
+            <el-radio-button value="month">月度</el-radio-button>
+            <el-radio-button value="year">年度</el-radio-button>
+          </el-radio-group>
+        </el-col>
+        <el-col :span="3">
+          <el-button type="primary" @click="loadStats" style="width: 100%">分析</el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -73,6 +79,7 @@ import { useStore } from '../composables/useStore'
 const { accs } = useStore()
 
 const sd = ref({})
+const groupBy = ref('month')
 const sf = reactive({ acc: '', sd: '', ed: '' })
 const trendRef = ref(null)
 const expensePieRef = ref(null)
@@ -143,6 +150,7 @@ const resize = () => {
 
 const loadStats = async () => {
   const p2 = new URLSearchParams()
+  p2.set('group_by', groupBy.value)
   if (sf.acc) p2.set('account_id', sf.acc)
   if (sf.sd) p2.set('start_date', sf.sd)
   if (sf.ed) p2.set('end_date', sf.ed)

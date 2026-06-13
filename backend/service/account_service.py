@@ -9,10 +9,10 @@ class AccountService:
         self.account_dao = account_dao
         self.log_dao = log_dao
 
-    def get_all(self, user_id):
-        return self.account_dao.get_all(user_id)
+    def get_all(self):
+        return self.account_dao.get_all(get_current_user_id())
 
-    def add(self, user_id, name, type_, balance=0):
+    def add(self, name, type_, balance=0):
         if not name or not name.strip():
             return False, "名称不能为空"
         if not type_:
@@ -24,6 +24,7 @@ class AccountService:
         except:
             return False, "余额格式错误"
         with connection_scope() as conn:
+            user_id = get_current_user_id()
             a = self.account_dao.create(user_id, name.strip(), type_, balance, conn=conn)
             self.log_dao.add(user_id, "ADD_ACCOUNT", f"添加账户:{name}", conn=conn)
             return True, a

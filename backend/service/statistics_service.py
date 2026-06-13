@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, date, timedelta
 from dao import TransactionDAO
+from context import get_current_user_id
 
 
 class StatisticsService:
@@ -8,8 +9,8 @@ class StatisticsService:
     def __init__(self, transaction_dao: TransactionDAO):
         self.transaction_dao = transaction_dao
 
-    def get(self, user_id, account_id=None, start_date=None, end_date=None, group_by="month"):
-        result = self.transaction_dao.get_all(user_id, account_id=account_id, start_date=start_date, end_date=end_date, page_size=99999)
+    def get(self, account_id=None, start_date=None, end_date=None, group_by="month"):
+        result = self.transaction_dao.get_all(get_current_user_id(), account_id=account_id, start_date=start_date, end_date=end_date, page_size=99999)
         transactions = result["transactions"]
         total_income = sum(float(t["amount"]) for t in transactions if t["type"] == "income")
         total_expense = sum(float(t["amount"]) for t in transactions if t["type"] == "expense")

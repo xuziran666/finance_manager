@@ -11,10 +11,10 @@ class TransactionService:
         self.transaction_dao = transaction_dao
         self.log_dao = log_dao
 
-    def get_all(self, user_id, *args, **kwargs):
-        return self.transaction_dao.get_all(user_id, *args, **kwargs)
+    def get_all(self, *args, **kwargs):
+        return self.transaction_dao.get_all(get_current_user_id(), *args, **kwargs)
 
-    def add(self, user_id, account_id, type_, category, amount, note="", date=None, subcategory=""):
+    def add(self, account_id, type_, category, amount, note="", date=None, subcategory=""):
         if not account_id:
             return False, "请选择账户"
         if type_ not in ("income", "expense"):
@@ -28,6 +28,7 @@ class TransactionService:
         except:
             return False, "金额格式错误"
         with connection_scope() as conn:
+            user_id = get_current_user_id()
             account = self.account_dao.get_by_id(account_id, conn=conn)
             if not account or account.get("user_id") != user_id:
                 return False, "账户不存在"
@@ -49,7 +50,7 @@ class TransactionService:
             self.log_dao.add(user_id, "DELETE_TRANSACTION", f"删除交易[{transaction_id}]:{txn['type']} {txn['amount']}", conn=conn)
             return True, "删除成功"
 
-    def transfer(self, user_id, source_id, target_id, amount, note=""):
+    def transfer(self, source_id, target_id, amount, note=""):
         try:
             amount = float(amount)
             if amount <= 0:
@@ -57,6 +58,7 @@ class TransactionService:
         except:
             return False, "金额格式错误"
         with connection_scope() as conn:
+            user_id = get_current_user_id()
             from_account = self.account_dao.get_by_id(source_id, conn=conn)
             to_account = self.account_dao.get_by_id(target_id, conn=conn)
             if not from_account or from_account.get("user_id") != user_id:

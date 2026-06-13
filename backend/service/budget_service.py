@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dao import BudgetDAO, TransactionDAO, LogDAO
 from db import connection_scope
+from context import get_current_user_id
 
 
 class BudgetService:
@@ -10,10 +11,10 @@ class BudgetService:
         self.transaction_dao = transaction_dao
         self.log_dao = log_dao
 
-    def get_all(self, user_id, year=None, month=None):
-        return self.budget_dao.get_all(user_id, year, month)
+    def get_all(self, year=None, month=None):
+        return self.budget_dao.get_all(get_current_user_id(), year, month)
 
-    def set(self, user_id, year, month, category, amount, subcategory=""):
+    def set(self, year, month, category, amount, subcategory=""):
         try:
             amount = float(amount)
             if amount < 0:
@@ -21,16 +22,18 @@ class BudgetService:
         except:
             return False, "格式错误"
         with connection_scope() as conn:
+            user_id = get_current_user_id()
             self.budget_dao.set(user_id, year, month, category, amount, subcategory, conn=conn)
             self.log_dao.add(user_id, "SET_BUDGET", f"{year}/{month} {category}:{amount}", conn=conn)
             return True, "设置成功"
 
-    def delete(self, user_id, year, month, category, subcategory=""):
-        self.budget_dao.delete(user_id, year, month, category, subcategory)
+    def delete(self, year, month, category, subcategory=""):
+        self.budget_dao.delete(get_current_user_id(), year, month, category, subcategory)
         return True
 
-    def get_summary(self, user_id, year, month):
+    def get_summary(self, year, month):
         with connection_scope() as conn:
+            user_id = get_current_user_id()
             budgets = self.budget_dao.get_all(user_id, year, month, conn=conn)
             spend = defaultdict(float)
             start_date = f"{year}-{month:02d}-01"
