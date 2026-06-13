@@ -4,8 +4,7 @@ from db import get_connection
 
 class TransactionDAO:
 
-    @staticmethod
-    def get_all(user_id, account_id=None, start_date=None, end_date=None, category=None, page=1, page_size=20, conn=None):
+    def get_all(self, user_id, account_id=None, start_date=None, end_date=None, category=None, page=1, page_size=20, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -45,8 +44,7 @@ class TransactionDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def create(user_id, account_id, type_, category, amount, note="", date=None, subcategory="", conn=None):
+    def create(self, user_id, account_id, type_, category, amount, note="", date=None, subcategory="", conn=None):
         now_dt = datetime.now()
         now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
         if not date:
@@ -73,20 +71,19 @@ class TransactionDAO:
                 c.execute("UPDATE accounts SET balance=%s WHERE id=%s", (balance, account_id))
             if own_conn:
                 conn.commit()
-            return TransactionDAO.get_by_id(transaction_id, conn=conn)
+            return self.get_by_id(transaction_id, conn=conn)
         finally:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def delete(transaction_id, user_id=None, conn=None):
+    def delete(self, transaction_id, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
             own_conn = True
         try:
             c = conn.cursor()
-            txn = TransactionDAO.get_by_id(transaction_id, conn=conn)
+            txn = self.get_by_id(transaction_id, conn=conn)
             if not txn:
                 return False
             if user_id is None:
@@ -106,8 +103,7 @@ class TransactionDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def get_by_id(transaction_id, user_id=None, conn=None):
+    def get_by_id(self, transaction_id, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()

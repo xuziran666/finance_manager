@@ -5,16 +5,18 @@ from dao import TransactionDAO
 
 class StatisticsService:
 
-    @staticmethod
-    def get(user_id, account_id=None, start_date=None, end_date=None, group_by="month"):
-        result = TransactionDAO.get_all(user_id, account_id=account_id, start_date=start_date, end_date=end_date, page_size=99999)
+    def __init__(self, transaction_dao: TransactionDAO):
+        self.transaction_dao = transaction_dao
+
+    def get(self, user_id, account_id=None, start_date=None, end_date=None, group_by="month"):
+        result = self.transaction_dao.get_all(user_id, account_id=account_id, start_date=start_date, end_date=end_date, page_size=99999)
         transactions = result["transactions"]
         total_income = sum(float(t["amount"]) for t in transactions if t["type"] == "income")
         total_expense = sum(float(t["amount"]) for t in transactions if t["type"] == "expense")
         income_grouped = defaultdict(float)
         expense_grouped = defaultdict(float)
         for t in transactions:
-            group_key = StatisticsService._get_group_key(t.get("date", ""), group_by)
+            group_key = self._get_group_key(t.get("date", ""), group_by)
             amount = float(t["amount"])
             if t["type"] == "income":
                 income_grouped[group_key] += amount
@@ -55,8 +57,7 @@ class StatisticsService:
             "line_chart": ""
         }
 
-    @staticmethod
-    def _get_group_key(date_str, group_by):
+    def _get_group_key(self, date_str, group_by):
         if not date_str:
             return "未知"
         if isinstance(date_str, (datetime, date)):
