@@ -3,8 +3,7 @@ from db import get_connection, connection_scope
 
 class CategoryDAO:
 
-    @staticmethod
-    def copy_defaults(new_user_id, conn=None):
+    def copy_defaults(self, new_user_id, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -22,8 +21,7 @@ class CategoryDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def create(type_, main, sub="", conn=None, user_id=None):
+    def create(self, type_, main, sub="", conn=None, user_id=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -38,8 +36,7 @@ class CategoryDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def delete(user_id, type_, main, sub="", conn=None):
+    def delete(self, user_id, type_, main, sub="", conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -59,8 +56,7 @@ class CategoryDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def update(user_id, old_type, old_main, old_sub, new_type, new_main, new_sub, conn=None):
+    def update(self, user_id, old_type, old_main, old_sub, new_type, new_main, new_sub, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -79,8 +75,7 @@ class CategoryDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def get_all(user_id, conn=None):
+    def get_all(self, user_id, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -93,9 +88,8 @@ class CategoryDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def get_tree(user_id, conn=None):
-        cats = CategoryDAO.get_all(user_id, conn=conn)
+    def get_tree(self, user_id, conn=None):
+        cats = self.get_all(user_id, conn=conn)
         tree = {}
         for cat in cats:
             cat_type = cat["type"]
@@ -109,8 +103,7 @@ class CategoryDAO:
                 tree[cat_type][cat_main].append(cat_sub)
         return tree
 
-    @staticmethod
-    def exists(user_id, type_, main, sub="", conn=None):
+    def exists(self, user_id, type_, main, sub="", conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()

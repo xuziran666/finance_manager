@@ -3,8 +3,7 @@ from db import get_connection
 
 class LogDAO:
 
-    @staticmethod
-    def add(user_id, action, detail, conn=None):
+    def add(self, user_id, action, detail, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -19,8 +18,7 @@ class LogDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def get_all(user_id, limit=100, conn=None):
+    def get_all(self, user_id, limit=100, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()

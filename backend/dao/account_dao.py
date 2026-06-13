@@ -4,8 +4,7 @@ from context import get_current_user_id
 
 class AccountDAO:
 
-    @staticmethod
-    def get_all(user_id, conn=None):
+    def get_all(self, user_id, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -18,8 +17,7 @@ class AccountDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def get_by_id(aid, user_id=None, conn=None):
+    def get_by_id(self, aid, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -38,8 +36,7 @@ class AccountDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def create(user_id, name, type_, balance=0.0, conn=None):
+    def create(self, user_id, name, type_, balance=0.0, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -51,13 +48,12 @@ class AccountDAO:
             if own_conn:
                 conn.commit()
             aid = c.lastrowid
-            return AccountDAO.get_by_id(aid, conn=conn)
+            return self.get_by_id(aid, conn=conn)
         finally:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def update(aid, user_id=None, name=None, type_=None, conn=None):
+    def update(self, aid, user_id=None, name=None, type_=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -77,13 +73,12 @@ class AccountDAO:
                 c.execute("UPDATE accounts SET type=%s WHERE id=%s", (type_, aid))
             if own_conn:
                 conn.commit()
-            return AccountDAO.get_by_id(aid, conn=conn)
+            return self.get_by_id(aid, conn=conn)
         finally:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def update_balance(aid, bal, conn=None):
+    def update_balance(self, aid, bal, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -93,13 +88,12 @@ class AccountDAO:
             c.execute("UPDATE accounts SET balance=%s WHERE id=%s", (bal, aid))
             if own_conn:
                 conn.commit()
-            return AccountDAO.get_by_id(aid, conn=conn)
+            return self.get_by_id(aid, conn=conn)
         finally:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def delete(aid, user_id=None, conn=None):
+    def delete(self, aid, user_id=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -117,7 +111,7 @@ class AccountDAO:
             c.execute("DELETE FROM accounts WHERE id=%s", (aid,))
             if own_conn:
                 conn.commit()
-            return True
+            return self.get_by_id(aid, conn=conn)
         finally:
             if own_conn:
                 conn.close()

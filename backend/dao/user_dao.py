@@ -3,8 +3,7 @@ from db import get_connection
 
 class UserDAO:
 
-    @staticmethod
-    def get_by_username(username, conn=None):
+    def get_by_username(self, username, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -18,8 +17,7 @@ class UserDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def create(username, password_hash, conn=None):
+    def create(self, username, password_hash, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()

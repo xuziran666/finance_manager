@@ -3,8 +3,7 @@ from db import get_connection
 
 class BudgetDAO:
 
-    @staticmethod
-    def get_all(user_id, year=None, month=None, conn=None):
+    def get_all(self, user_id, year=None, month=None, conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -26,8 +25,7 @@ class BudgetDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def set(user_id, year, month, category, amount, subcategory="", conn=None):
+    def set(self, user_id, year, month, category, amount, subcategory="", conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
@@ -52,8 +50,7 @@ class BudgetDAO:
             if own_conn:
                 conn.close()
 
-    @staticmethod
-    def delete(user_id, year, month, category, subcategory="", conn=None):
+    def delete(self, user_id, year, month, category, subcategory="", conn=None):
         own_conn = False
         if conn is None:
             conn = get_connection()
