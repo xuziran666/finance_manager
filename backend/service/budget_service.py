@@ -5,12 +5,15 @@ from db import connection_scope
 
 class BudgetService:
 
-    @staticmethod
-    def get_all(user_id, year=None, month=None):
-        return BudgetDAO.get_all(user_id, year, month)
+    def __init__(self, budget_dao: BudgetDAO, transaction_dao: TransactionDAO, log_dao: LogDAO):
+        self.budget_dao = budget_dao
+        self.transaction_dao = transaction_dao
+        self.log_dao = log_dao
 
-    @staticmethod
-    def set(user_id, year, month, category, amount, subcategory=""):
+    def get_all(self, user_id, year=None, month=None):
+        return self.budget_dao.get_all(user_id, year, month)
+
+    def set(self, user_id, year, month, category, amount, subcategory=""):
         try:
             amount = float(amount)
             if amount < 0:
@@ -18,23 +21,21 @@ class BudgetService:
         except:
             return False, "格式错误"
         with connection_scope() as conn:
-            BudgetDAO.set(user_id, year, month, category, amount, subcategory, conn=conn)
-            LogDAO.add(user_id, "SET_BUDGET", f"{year}/{month} {category}:{amount}", conn=conn)
+            self.budget_dao.set(user_id, year, month, category, amount, subcategory, conn=conn)
+            self.log_dao.add(user_id, "SET_BUDGET", f"{year}/{month} {category}:{amount}", conn=conn)
             return True, "设置成功"
 
-    @staticmethod
-    def delete(user_id, year, month, category, subcategory=""):
-        BudgetDAO.delete(user_id, year, month, category, subcategory)
+    def delete(self, user_id, year, month, category, subcategory=""):
+        self.budget_dao.delete(user_id, year, month, category, subcategory)
         return True
 
-    @staticmethod
-    def get_summary(user_id, year, month):
+    def get_summary(self, user_id, year, month):
         with connection_scope() as conn:
-            budgets = BudgetDAO.get_all(user_id, year, month, conn=conn)
+            budgets = self.budget_dao.get_all(user_id, year, month, conn=conn)
             spend = defaultdict(float)
             start_date = f"{year}-{month:02d}-01"
             end_date = f"{year+1}-01-01" if month == 12 else f"{year}-{month+1:02d}-01"
-            result = TransactionDAO.get_all(user_id, start_date=start_date, end_date=end_date, page_size=99999, conn=conn)
+            result = self.transaction_dao.get_all(user_id, start_date=start_date, end_date=end_date, page_size=99999, conn=conn)
             for t in result["transactions"]:
                 if t["type"] == "expense":
                     spend[t.get("category", "其他")] += float(t["amount"])
