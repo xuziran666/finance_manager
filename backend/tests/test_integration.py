@@ -57,17 +57,17 @@ def auth_header():
     return {"Authorization": f"Bearer {_token}"}
 
 
-def auth_post(url, json_data):
-    return client.post(url, json=json_data, headers=auth_header())
+def auth_post(url, json=None):
+    return client.post(url, json=json, headers=auth_header())
 
 
-def auth_put(url, json_data):
-    return client.put(url, json=json_data, headers=auth_header())
+def auth_put(url, json=None):
+    return client.put(url, json=json, headers=auth_header())
 
 
-def auth_delete(url, json_data=None):
-    if json_data:
-        return client.request("DELETE", url, json=json_data, headers=auth_header())
+def auth_delete(url, json=None):
+    if json:
+        return client.request("DELETE", url, json=json, headers=auth_header())
     return client.delete(url, headers=auth_header())
 
 
@@ -240,7 +240,7 @@ class TestCategoryIntegration(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["code"], 200)
 
-        resp = auth_delete("/api/categories", json_data={
+        resp = auth_delete("/api/categories", json={
             "type": "集成测试", "main": "集成测试主分类-新", "sub": "",
         })
         self.assertEqual(resp.status_code, 200)
@@ -282,7 +282,7 @@ class TestBudgetIntegration(unittest.TestCase):
         self.assertIn("summary", summary)
         self.assertIn("warnings", summary)
 
-        resp = auth_delete("/api/budgets", json_data={
+        resp = auth_delete("/api/budgets", json={
             "year": 2026, "month": 6, "category": "餐饮",
         })
         self.assertEqual(resp.status_code, 200)

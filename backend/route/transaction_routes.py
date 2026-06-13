@@ -7,13 +7,14 @@ from dto import TransactionCreate, TransferCreate
 from vo import ApiResponse
 from service import TransactionService
 from route.depends import get_current_user
+from route.di_providers import get_transaction_service
 
 router = APIRouter(tags=["交易记录"])
 
 
 @router.post("/transactions", summary="添加交易")
-def add_transaction(data: TransactionCreate, user: dict = Depends(get_current_user)):
-    ok, result = TransactionService.add(
+def add_transaction(data: TransactionCreate, user: dict = Depends(get_current_user), svc: TransactionService = Depends(get_transaction_service)):
+    ok, result = svc.add(
         user["user_id"], data.account_id, data.type, data.category,
         data.amount, data.note, data.date, data.subcategory,
     )
@@ -21,8 +22,8 @@ def add_transaction(data: TransactionCreate, user: dict = Depends(get_current_us
 
 
 @router.post("/transactions/transfer", summary="账户转账")
-def transfer_money(data: TransferCreate, user: dict = Depends(get_current_user)):
-    ok, msg = TransactionService.transfer(
+def transfer_money(data: TransferCreate, user: dict = Depends(get_current_user), svc: TransactionService = Depends(get_transaction_service)):
+    ok, msg = svc.transfer(
         user["user_id"], data.from_account, data.to_account, data.amount, data.note,
     )
     return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
@@ -31,6 +32,7 @@ def transfer_money(data: TransferCreate, user: dict = Depends(get_current_user))
 @router.get("/transactions", summary="查询交易记录")
 def get_transactions(
     user: dict = Depends(get_current_user),
+    svc: TransactionService = Depends(get_transaction_service),
     account_id: Optional[int] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -38,25 +40,26 @@ def get_transactions(
     page: int = Query(1),
     page_size: int = Query(20),
 ):
-    return ApiResponse(data=TransactionService.get_all(
+    return ApiResponse(data=svc.get_all(
         user["user_id"], account_id, start_date, end_date, category, page, page_size,
     ))
 
 
 @router.delete("/transactions/{id}", summary="删除交易")
-def delete_transaction(id: int, user: dict = Depends(get_current_user)):
-    ok, msg = TransactionService.delete(id)
+def delete_transaction(id: int, user: dict = Depends(get_current_user), svc: TransactionService = Depends(get_transaction_service)):
+    ok, msg = svc.delete(id)
     return ApiResponse(msg=msg) if ok else ApiResponse(code=400, msg=msg)
 
 
 @router.get("/transactions/export", summary="导出交易 CSV")
 def export_csv(
     user: dict = Depends(get_current_user),
+    svc: TransactionService = Depends(get_transaction_service),
     account_id: Optional[int] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
 ):
-    data = TransactionService.get_all(user["user_id"], account_id, start_date, end_date, page_size=99999)
+    data = svc.get_all(user["user_id"], account_id, start_date, end_date, page_size=99999)
     transactions = data.get("transactions", [])
     output = io.StringIO()
     writer = csv.writer(output)
